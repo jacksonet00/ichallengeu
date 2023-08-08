@@ -3,7 +3,7 @@ import Loading from '@/components/Loading';
 import PhotoUploader from '@/components/PhotoUploader';
 import { auth } from '@/firebase';
 import { genKey } from '@/util';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
@@ -52,6 +52,10 @@ export default function ProfilePhoto() {
 
   async function onSubmitPhoto(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    await updateProfile(auth.currentUser!, {
+      photoURL: photoUrl,
+    });
 
     _updateUser({
       uid: auth.currentUser!.uid,

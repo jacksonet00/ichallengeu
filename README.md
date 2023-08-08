@@ -18,7 +18,7 @@ Create custom leaderboards to compete with friends!
   - Implement for evidence 
 - Implement invite links (done, mvp)
 - Implement text system (done)
-  - Implement for invites
-  - Implement for reminder CRON job
+  - Implement for invites (done)
+  - Implement for reminder CRON job -- move to stretch task
 - Styling
 - Deployment

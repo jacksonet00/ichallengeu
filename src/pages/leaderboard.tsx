@@ -3,6 +3,7 @@ import IconExplainer from '@/components/IconExplainer';
 import LeaderboardEntry from '@/components/LeaderboardEntry';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
+import PhoneInviteForm from '@/components/PhoneInviteForm';
 import TrophyCase from '@/components/TrophyCase';
 import { InviteDocument, LeaderboardData } from '@/data';
 import { auth, db, getAnalyticsSafely } from '@/firebase';
@@ -81,6 +82,10 @@ export default function Leaderboard() {
     <div className="flex items-center justify-center flex-col">
       <LogoutButton />
       {isOwner() && <button onClick={copyInviteLink}>Copy Invite Link</button>}
+      {isOwner() && <PhoneInviteForm
+        challengeId={challenge!.id}
+        senderName={auth.currentUser!.displayName || 'anonymous'}
+      />}
       <h1 className="font-bold mb-8">{challenge!.name}: Day #{challenge!.currentDay()}{`${challenge!.isCompleted() ? ' ✅' : ''}`}</h1>
       <div className="w-80 flex flex-col justify-start items-center mb-10">
         {challenge!.isCompleted() ? <TrophyCase winners={winners} /> : <IconExplainer />}

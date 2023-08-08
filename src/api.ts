@@ -48,18 +48,16 @@ export async function fetchParticipants(challengeId: string): Promise<Participan
 
 export interface TextMessage {
   to: string;
-  from: string;
+  from?: string;
   body: string;
 }
 
 export async function sendText({
   to,
-  from,
   body,
 }: TextMessage) {
-  addDoc(collection(db, 'messages'), {
+  return addDoc(collection(db, 'messages'), {
     to,
-    from,
     body,
   });
 }

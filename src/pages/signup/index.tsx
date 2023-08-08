@@ -1,7 +1,7 @@
 import { fetchUser, updateUser } from '@/api';
 import Loading from '@/components/Loading';
 import { auth } from '@/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
@@ -52,6 +52,10 @@ export default function SignUp() {
 
   async function onSubmitUsername(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    await updateProfile(auth.currentUser!, {
+      displayName: username
+    });
 
     _updateUser({
       uid: auth.currentUser!.uid,
