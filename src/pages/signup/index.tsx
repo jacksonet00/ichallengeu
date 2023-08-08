@@ -1,4 +1,4 @@
-import { updateUser } from '@/api';
+import { fetchUser, updateUser } from '@/api';
 import Loading from '@/components/Loading';
 import { auth } from '@/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -27,14 +27,24 @@ export default function SignUp() {
   });
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setLoading(true);
         router.push({
           pathname: '/login',
+          query: {
+            next: router.query.next || '/',
+          },
         });
       }
       else {
+        const userDoc = await fetchUser(user.uid);
+        if (userDoc) {
+          router.push({
+            pathname: router.query.next as string || '/',
+          });
+          return;
+        }
         setLoading(false);
       }
     });
@@ -49,6 +59,7 @@ export default function SignUp() {
         name: username,
         phone: auth.currentUser!.phoneNumber!,
         profilePhotoUrl: null,
+        challenges: [],
       }
     });
   }

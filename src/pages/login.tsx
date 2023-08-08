@@ -2,7 +2,7 @@ import { fetchUser } from '@/api';
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { auth } from '../../firebase';
+import { auth } from '../firebase';
 
 function mountRecaptchaVerifier() {
   if (!window.recaptchaVerifier) {
@@ -27,37 +27,31 @@ export default function Login() {
 
   async function validatePhone(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    window.recaptchaVerifier.verify();
+    await window.recaptchaVerifier.verify();
 
-    const appVerifier = await window.recaptchaVerifier;
-    const _confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-
+    const _confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
     setConfirmationResult(_confirmationResult);
   }
 
   async function validateCode(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    confirmationResult?.confirm(code).then(async (userCredential) => {
 
-      const user = await fetchUser(userCredential.user.uid);
+    const userCredential = await confirmationResult!.confirm(code);
+    const user = await fetchUser(userCredential.user.uid);
 
-      if (!user) {
-        router.push({
-          pathname: '/signup',
-          query: {
-            next: router.query.next || '/',
-          }
-        });
-        return;
-      }
+    const next = router.query.next as string || '/';
 
-      if (router.query.next) {
-        router.push(router.query.next as string);
-        return;
-      }
+    if (!user) {
+      router.push({
+        pathname: '/signup',
+        query: {
+          next
+        }
+      });
+      return;
+    }
 
-      router.push('/');
-    });
+    router.push(next);
   }
 
   return (

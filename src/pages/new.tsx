@@ -56,10 +56,11 @@ export default function NewChallengeForm() {
       name: challengeName,
       dayCount,
       startDate: new Date(startDate),
+      users: [auth.currentUser!.uid],
     });
   }
 
-  if (loading || isLoadingUser) {
+  if (!auth.currentUser || loading || isLoadingUser) {
     return <Loading />;
   }
 

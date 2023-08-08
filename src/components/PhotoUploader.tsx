@@ -9,26 +9,33 @@ async function uploadFile(file: File, filename: string): Promise<string> {
 }
 
 interface PhotoUploaderProps {
+  directory: string;
   filename: string;
+  onUpload: (url: string) => void;
 }
 
-export default function PhotoUploader({ filename }: PhotoUploaderProps) {
+export default function PhotoUploader({
+  directory,
+  filename,
+  onUpload }: PhotoUploaderProps) {
   const [file, setFile] = useState<File | null>(null);
   const [url, setUrl] = useState<string | null>(null);
 
-  async function handleUploadPhoto(e: React.FormEvent<HTMLFormElement>) {
+  async function handleUploadPhoto(e: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     e.preventDefault();
-    setUrl(await uploadFile(file!, filename));
+    const uri = await uploadFile(file!, `${directory}/${filename}`);
+    setUrl(uri);
+    onUpload(uri);
   }
 
   return (
-    <form onSubmit={handleUploadPhoto}>
+    <div className="mb-4">
       {url && <Image src={url} alt="user uploaded image" width={64} height={64} />}
       <input
         type="file"
         onChange={(e) => setFile(e.target.files![0])}
       />
-      <button type="submit">upload</button>
-    </form>
+      <button onClick={handleUploadPhoto}>upload</button>
+    </div>
   );
 }

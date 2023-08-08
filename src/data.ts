@@ -1,9 +1,10 @@
 import { DocumentData, DocumentSnapshot, Timestamp } from "firebase/firestore";
 import { daysBetween } from './util';
+import { ApplicationVerifier } from 'firebase/auth';
 
 declare global {
   interface Window {
-    recaptchaVerifier: any;
+    recaptchaVerifier: ApplicationVerifier;
   }
 }
 
@@ -11,6 +12,7 @@ export interface ICUserDocument {
   name: string;
   phone: string;
   profilePhotoUrl: string | null;
+  challenges: string[];
 }
 
 export class ICUser {
@@ -18,14 +20,16 @@ export class ICUser {
   name: string;
   phone: string;
   profilePhotoUrl: string | null;
+  challenges: string[];
 
   constructor(doc: DocumentSnapshot<DocumentData>) {
-    const { name, phone, profilePhotoUrl } = doc.data()! as ICUserDocument;
+    const { name, phone, profilePhotoUrl, challenges } = doc.data()! as ICUserDocument;
 
     this.id = doc.id;
     this.name = name;
     this.phone = phone;
     this.profilePhotoUrl = profilePhotoUrl;
+    this.challenges = challenges;
   }
 };
 
@@ -34,6 +38,7 @@ export interface ChallengeDocument {
   name: string;
   startDate: Timestamp;
   dayCount: number;
+  users: string[];
 }
 
 export class Challenge {
@@ -42,15 +47,17 @@ export class Challenge {
   name: string;
   startDate: Date;
   dayCount: number;
+  users: string[];
 
   constructor(doc: DocumentSnapshot<DocumentData>) {
-    const { ownerId, name, startDate, dayCount } = doc.data()! as ChallengeDocument;
+    const { ownerId, name, startDate, dayCount, users } = doc.data()! as ChallengeDocument;
 
     this.id = doc.id;
     this.ownerId = ownerId;
     this.name = name;
     this.startDate = startDate.toDate();
     this.dayCount = dayCount;
+    this.users = users;
   }
 
   isCompleted(): boolean {
@@ -61,12 +68,13 @@ export class Challenge {
     if (daysBetween(this.startDate) > this.dayCount) {
       return this.dayCount;
     }
-    return daysBetween(this.startDate) + 1;
+    return daysBetween(this.startDate);
   }
 };
 
 export interface ParticipantDocument {
   name: string;
+  userId: string;
   challengeId: string;
   daysCompleted: number[];
 }
@@ -74,14 +82,16 @@ export interface ParticipantDocument {
 export class Participant {
   id: string;
   name: string;
+  userId: string;
   challengeId: string;
   daysCompleted: number[];
 
   constructor(doc: DocumentSnapshot<DocumentData>) {
-    const { name, challengeId, daysCompleted } = doc.data()! as ParticipantDocument;
+    const { name, userId, challengeId, daysCompleted } = doc.data()! as ParticipantDocument;
 
     this.id = doc.id;
     this.name = name;
+    this.userId = userId;
     this.challengeId = challengeId;
     this.daysCompleted = daysCompleted;
   }
