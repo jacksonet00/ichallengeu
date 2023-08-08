@@ -1,6 +1,6 @@
+import { ApplicationVerifier } from 'firebase/auth';
 import { DocumentData, DocumentSnapshot, Timestamp } from "firebase/firestore";
 import { daysBetween } from './util';
-import { ApplicationVerifier } from 'firebase/auth';
 
 declare global {
   interface Window {

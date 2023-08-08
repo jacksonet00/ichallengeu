@@ -1,5 +1,6 @@
-import { sendText } from '@/api';
+import { createInvite, sendText } from '@/api';
 import { auth, db } from '@/firebase';
+import { timestampToDate } from '@/util';
 import { Timestamp, addDoc, collection } from 'firebase/firestore';
 import { useState } from 'react';
 
@@ -19,23 +20,23 @@ export default function PhoneInviteForm({
   const [phone, setPhone] = useState('');
 
   async function genInviteLink() {
-    const invite = await addDoc(collection(db, 'invites'), {
+    const inviteId = await createInvite({
       challengeId,
       senderId: auth.currentUser!.uid,
       expires,
-      expiresAt,
+      expiresAt: timestampToDate(expiresAt),
     });
 
-    return `${window.location.origin}/join?inviteId=${invite.id}`;
+    return `${window.location.origin}/join?inviteId=${inviteId}`;
   }
 
   async function sendInvite(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    sendText({
-      to: phone,
-      body: `${senderName} invited you to join their competition on iChallenge U! Let's go!! ${await genInviteLink()}}`
-    });
+    sendText(
+      phone,
+      `${senderName} invited you to join their competition on iChallenge U! Let's go!! ${await genInviteLink()}}`
+    );
   }
 
   return (

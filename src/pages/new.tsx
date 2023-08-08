@@ -1,10 +1,10 @@
-import { createChallenge, fetchUser } from '@/api';
+import { createChallenge, createParticipant, fetchUser } from '@/api';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
-import { ParticipantDocument } from '@/data';
-import { auth, db } from '@/firebase';
+import { auth } from '@/firebase';
+import { stringToTimestamp } from '@/util';
 import { onAuthStateChanged } from 'firebase/auth';
-import { addDoc, collection } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -22,12 +22,12 @@ export default function NewChallengeForm() {
   } = useMutation({
     mutationFn: createChallenge,
     onSuccess: async (challengeId) => {
-      addDoc(collection(db, 'participants'), {
+      await createParticipant({
         challengeId,
         daysCompleted: [],
         name: user!.name,
         userId: auth.currentUser!.uid,
-      } as ParticipantDocument);
+      });
 
       router.push({
         pathname: '/leaderboard',
@@ -64,7 +64,7 @@ export default function NewChallengeForm() {
       ownerId: auth.currentUser!.uid,
       name: challengeName,
       dayCount,
-      startDate: new Date(startDate),
+      startDate: stringToTimestamp(startDate)!,
       users: [auth.currentUser!.uid],
     });
   }

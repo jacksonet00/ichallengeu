@@ -1,4 +1,4 @@
-import { fetchChallenge, fetchParticipants } from '@/api';
+import { createInvite, fetchChallenge, fetchParticipants } from '@/api';
 import IconExplainer from '@/components/IconExplainer';
 import LeaderboardEntry from '@/components/LeaderboardEntry';
 import Loading from '@/components/Loading';
@@ -61,14 +61,12 @@ export default function Leaderboard() {
   }
 
   async function copyInviteLink(e: React.MouseEvent<HTMLButtonElement>) {
-    const invite = await addDoc(collection(db, 'invites'), {
+    const inviteId = await createInvite({
       challengeId: challenge!.id,
       senderId: auth.currentUser!.uid,
-      expires: false,
-      expiresAt: null,
-    } as InviteDocument);
+    });
 
-    navigator.clipboard.writeText(`${window.location.origin}/join?inviteId=${invite.id}`);
+    navigator.clipboard.writeText(`${window.location.origin}/join?inviteId=${inviteId}`);
   }
 
   const leaderboard = participants!

@@ -15,10 +15,11 @@ Create custom leaderboards to compete with friends!
 
 - Implement photo uploader (done)
   - Implement for prof pic (done)
-  - Implement for evidence 
+  - Implement for evidence -- move to stretch task
 - Implement invite links (done, mvp)
 - Implement text system (done)
   - Implement for invites (done)
   - Implement for reminder CRON job -- move to stretch task
 - Styling
+- Analytics
 - Deployment
