@@ -20,6 +20,7 @@ Create custom leaderboards to compete with friends!
 - Implement text system (done)
   - Implement for invites (done)
   - Implement for reminder CRON job -- move to stretch task
+- Implement completions
 - Styling
 - Analytics
 - Deployment

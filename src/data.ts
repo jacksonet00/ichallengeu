@@ -122,20 +122,9 @@ export class Participant {
   }
 };
 
-export interface SerializedLeaderboardData {
-  participantId: string;
-  participantName: string;
-  currentDay: number;
-  lineChart: number[];
-  currentStreakLength: number;
-  currentStreakIncludesToday: boolean;
-  bestStreakLength: number;
-  totalCompletions: number;
-}
-
 export class LeaderboardData {
-  private participant: Participant;
-  private currentDay: number;
+  public participant: Participant;
+  public challenge: Challenge;
 
   public lineChart: number[];
 
@@ -151,22 +140,9 @@ export class LeaderboardData {
       b.totalCompletions - a.totalCompletions;
   }
 
-  public serialize(): SerializedLeaderboardData {
-    return {
-      participantId: this.participant.id,
-      participantName: this.participant.name,
-      currentDay: this.currentDay,
-      currentStreakIncludesToday: this.currentStreakIncludesToday,
-      currentStreakLength: this.currentStreakLength,
-      bestStreakLength: this.bestStreakLength,
-      totalCompletions: this.totalCompletions,
-      lineChart: this.lineChart,
-    };
-  }
-
-  constructor(participant: Participant, currentDay: number) {
+  constructor(participant: Participant, challenge: Challenge) {
     this.participant = participant;
-    this.currentDay = currentDay;
+    this.challenge = challenge;
     this.totalCompletions = participant.daysCompleted.length;
 
     let graph = [];
@@ -185,7 +161,7 @@ export class LeaderboardData {
       graph.push(curr);
       i++;
     }
-    while (i < this.currentDay) {
+    while (i < this.challenge.currentDay()) {
       graph.push(0);
       i++;
     }
@@ -194,12 +170,12 @@ export class LeaderboardData {
     this.lineChart = graph;
     this.bestStreakLength = best;
 
-    if (participant.daysCompleted.at(-1)! === currentDay) {
+    if (participant.daysCompleted.at(-1)! === this.challenge.currentDay()) {
       this.currentStreakLength = this.lineChart.at(-1)!;
       this.currentStreakIncludesToday = true;
     }
 
-    if (participant.daysCompleted.at(-1)! === currentDay - 1) {
+    if (participant.daysCompleted.at(-1)! === this.challenge.currentDay() - 1) {
       this.currentStreakLength = this.lineChart.at(-1)!;
     }
   }

@@ -1,4 +1,4 @@
-import { SerializedLeaderboardData } from '../data';
+import { LeaderboardData } from '../data';
 
 interface TrophyCaseRowProps {
   icon: string;
@@ -20,7 +20,7 @@ function TrophyCaseRow({
 }
 
 interface TrophyCaseProps {
-  winners: SerializedLeaderboardData[];
+  winners: LeaderboardData[];
 }
 
 export default function TrophyCase({
@@ -28,9 +28,9 @@ export default function TrophyCase({
 }: TrophyCaseProps) {
   return (
     <div className="bg-sky-50 w-60 h-40 rounded-md flex flex-col items-center pt-2 pb-2 justify-evenly">
-      <TrophyCaseRow icon="🥇" text={winners[0].participantName} />
-      {winners.length > 1 && <TrophyCaseRow icon="🥈" text={winners[1].participantName} />}
-      {winners.length > 2 && <TrophyCaseRow icon="🥉" text={winners[2].participantName} />}
+      <TrophyCaseRow icon="🥇" text={winners[0].participant.name} />
+      {winners.length > 1 && <TrophyCaseRow icon="🥈" text={winners[1].participant.name} />}
+      {winners.length > 2 && <TrophyCaseRow icon="🥉" text={winners[2].participant.name} />}
     </div>
   );
 }

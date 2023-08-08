@@ -1,39 +1,36 @@
-'use client';
-
 import { logEvent } from "firebase/analytics";
 import Image from 'next/image';
 import { useState } from "react";
+import { LeaderboardData } from "../data";
 import { getAnalyticsSafely } from "../firebase";
-import { SerializedLeaderboardData } from "../data";
 import CompletionGraph from "./CompletionGraph";
 
 export type ProfileProps = {
-    serializedLeaderboardData: SerializedLeaderboardData;
+    leaderboardData: LeaderboardData;
     crown: boolean;
 };
 
 export default function ProfileSmall({
-    serializedLeaderboardData,
+    leaderboardData,
     crown,
 }: ProfileProps) {
     const [isShowingGraph, setIsShowingGraph] = useState(false);
 
     const {
-        participantId,
+        participant,
         currentStreakIncludesToday,
         bestStreakLength,
         currentStreakLength,
-        participantName,
         totalCompletions,
         lineChart
-    } = serializedLeaderboardData;
+    } = leaderboardData;
 
     function toggleGraph() {
         const analytics = getAnalyticsSafely();
         if (analytics && !isShowingGraph) {
             logEvent(analytics, 'select_content', {
                 content_type: 'graph',
-                item_id: participantId,
+                item_id: participant.id,
             });
         }
 
@@ -70,7 +67,7 @@ export default function ProfileSmall({
                 <div className="flex flex-row">
                     <div className="flex flex-col">
                         <div className="flex flex-row">
-                            <h1 className="font-bold mr-2">{participantName}</h1>
+                            <h1 className="font-bold mr-2">{participant.name}</h1>
                             <h1 className="font-bold relative bottom-0.5">{`${crown ? '👑' : ''}`}</h1>
                         </div>
                         <div className="flex flex-row">

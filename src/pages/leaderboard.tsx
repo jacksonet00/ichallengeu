@@ -5,11 +5,10 @@ import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
 import PhoneInviteForm from '@/components/PhoneInviteForm';
 import TrophyCase from '@/components/TrophyCase';
-import { InviteDocument, LeaderboardData } from '@/data';
-import { auth, db, getAnalyticsSafely } from '@/firebase';
+import { LeaderboardData } from '@/data';
+import { auth, getAnalyticsSafely } from '@/firebase';
 import { genKey } from '@/util';
 import { logEvent } from 'firebase/analytics';
-import { addDoc, collection } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
 
@@ -70,11 +69,10 @@ export default function Leaderboard() {
   }
 
   const leaderboard = participants!
-    .map(participant => new LeaderboardData(participant, challenge!.currentDay()))
+    .map(participant => new LeaderboardData(participant, challenge!))
     .sort(LeaderboardData.compare);
 
-  const winners = leaderboard.slice(0, 3).map(leaderboardData => leaderboardData.serialize());
-
+  const winners = leaderboard.slice(0, 3);
 
   return (
     <div className="flex items-center justify-center flex-col">

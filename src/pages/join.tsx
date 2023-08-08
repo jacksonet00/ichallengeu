@@ -1,10 +1,10 @@
-import { fetchChallenge, fetchUser } from '@/api';
+import { fetchChallenge, fetchUser, joinChallenge } from '@/api';
 import Loading from '@/components/Loading';
 import { Invite } from '@/data';
 import { auth, db } from '@/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 
 async function fetchInvite(inviteId: string): Promise<Invite | null> {
@@ -15,18 +15,26 @@ async function fetchInvite(inviteId: string): Promise<Invite | null> {
   return new Invite(snapshot);
 }
 
+type JoiningStatus = 'Waiting...' | 'Searching...' | 'Joining...' | 'Joined!';
+
 export default function Join() {
   const router = useRouter();
 
-  const {
-    data: user,
-    isLoading: isLoadingUser,
-  } = useQuery('me', () => fetchUser(auth.currentUser!.uid));
+  const [status, setStatus] = useState<JoiningStatus | null>('Waiting...');
 
   const {
     data: invite,
     isLoading: isLoadingInvite,
-  } = useQuery(['invite', router.query.inviteId], () => fetchInvite(router.query.inviteId! as string));
+  } = useQuery(['invite', router.query.inviteId], () => fetchInvite(router.query.inviteId! as string), {
+    enabled: !!router.query.inviteId,
+  });
+
+  const {
+    data: user,
+    isLoading: isLoadingUser,
+  } = useQuery('me', () => fetchUser(auth.currentUser?.uid || ''), {
+    enabled: !!auth.currentUser,
+  });
 
   const {
     data: challenge,
@@ -35,66 +43,67 @@ export default function Join() {
     enabled: !!invite,
   });
 
-  async function joinChallenge() {
-    await setDoc(doc(db, 'challenges', challenge!.id), {
-      users: [...challenge!.users, auth.currentUser!.uid],
-    }, { merge: true });
-    await setDoc(doc(db, 'participants', auth.currentUser!.uid), {
-      challengeId: challenge!.id,
-      daysCompleted: [],
-      name: user!.name,
-      userId: auth.currentUser!.uid,
-    });
-    await setDoc(doc(db, 'users', auth.currentUser!.uid), {
-      challenges: [...user!.challenges, challenge!.id],
-    }, { merge: true });
-  }
-
   useEffect(() => {
     if (!router || !invite || !challenge) {
+      setStatus('Waiting...');
       return;
     }
+
+    setStatus('Searching...');
 
     if (!auth.currentUser) {
       router.push({
         pathname: '/login',
+        query: {
+          next: `/join?inviteId=${invite.id}`,
+        },
       });
+      return;
     }
 
+    // User has already joined the challenge
     if (challenge.users.includes(auth.currentUser!.uid)) {
+      setStatus('Joined!');
       router.push({
         pathname: '/leaderboard',
         query: {
           challengeId: challenge.id,
         },
       });
+      return;
     }
-    else {
-      if (!user) {
-        return;
-      }
 
-      joinChallenge().then(() => {
-        router.push({
-          pathname: '/leaderboard',
-          query: {
-            challengeId: challenge.id,
-          },
-        });
+    if (!user) {
+      setStatus('Waiting...');
+      return;
+    }
+
+    setStatus('Joining...');
+
+    joinChallenge(challenge, user).then(() => {
+      setStatus('Joined!');
+      router.push({
+        pathname: '/leaderboard',
+        query: {
+          challengeId: challenge.id,
+        },
       });
-    }
-
+    });
   }, [router, invite, challenge, user]);
 
   if (isLoadingInvite || isLoadingChallenge || isLoadingUser) {
-    return <Loading />;
+    return (
+      <div className='flex flex-col items-center'>
+        <Loading />
+        <h1 className="mt-4">{status}</h1>
+      </div>
+    )
   }
 
   return (
-    <div>
-      <h1>Join</h1>
-      <pre>{JSON.stringify(invite, null, 2)}</pre>
-      <pre>{JSON.stringify(challenge, null, 2)}</pre>
+    <div className='flex flex-col items-center'>
+      <Loading />
+      <h1 className="mt-4">{status}</h1>
     </div>
   );
 }

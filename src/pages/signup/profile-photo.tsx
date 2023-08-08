@@ -21,7 +21,7 @@ export default function ProfilePhoto() {
       queryClient.invalidateQueries('me');
 
       router.push({
-        pathname: router.query.next as string || '/',
+        pathname: (router.query.next as string || '/').replace('%3F', '?'), // a bit of a hack
       });
     }
   });
@@ -41,7 +41,7 @@ export default function ProfilePhoto() {
         const userDoc = await fetchUser(user.uid);
         if (userDoc?.profilePhotoUrl) {
           router.push({
-            pathname: router.query.next as string || '/',
+            pathname: (router.query.next as string || '/').replace('%3F', '?'), // here too...
           });
           return;
         }

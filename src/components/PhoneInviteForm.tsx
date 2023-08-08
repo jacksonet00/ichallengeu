@@ -1,7 +1,7 @@
 import { createInvite, sendText } from '@/api';
-import { auth, db } from '@/firebase';
+import { auth } from '@/firebase';
 import { timestampToDate } from '@/util';
-import { Timestamp, addDoc, collection } from 'firebase/firestore';
+import { Timestamp } from 'firebase/firestore';
 import { useState } from 'react';
 
 interface PhoneInviteFormProps {

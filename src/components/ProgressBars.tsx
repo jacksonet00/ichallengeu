@@ -1,14 +1,12 @@
-'use client';
-
 import { ChakraProvider, Progress } from "@chakra-ui/react";
-import { SerializedLeaderboardData } from "../data";
+import { LeaderboardData } from "../data";
 
 type ProgressBarsProps = {
-    serializedLeaderboardData: SerializedLeaderboardData;
+    leaderboardData: LeaderboardData;
 };
 
 export default function ProgressBars({
-    serializedLeaderboardData
+    leaderboardData
 }: ProgressBarsProps) {
     const {
         currentStreakLength,
@@ -16,7 +14,7 @@ export default function ProgressBars({
         bestStreakLength,
         totalCompletions,
         currentDay,
-    } = serializedLeaderboardData;
+    } = leaderboardData;
 
     return (
         <ChakraProvider>

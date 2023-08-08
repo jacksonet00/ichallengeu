@@ -1,5 +1,3 @@
-'use client';
-
 import { Chart } from "chart.js/auto";
 import { useEffect, useRef } from "react";
 

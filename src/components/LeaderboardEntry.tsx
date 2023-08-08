@@ -13,12 +13,12 @@ export default function LeaderboardEntry({ leaderboardData, crown }: Leaderboard
             <div>
                 <div className="mb-2">
                     <ProfileSmall
-                        serializedLeaderboardData={leaderboardData.serialize()}
+                        leaderboardData={leaderboardData}
                         crown={crown}
                     />
                 </div>
                 <ProgressBars
-                    serializedLeaderboardData={leaderboardData.serialize()}
+                    leaderboardData={leaderboardData}
                 />
             </div>
         </div>

@@ -1,6 +1,7 @@
-import { DocumentReference, addDoc, collection, doc, getDoc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { DocumentReference, addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
 import { Challenge, ChallengeDocument, ICUser, Invite, Participant, ParticipantDocument } from './data';
 import { db } from './firebase';
+import { genKey } from './util';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -42,6 +43,27 @@ export async function createChallenge(challenge: ChallengeDocument): Promise<str
   return ref.id;
 }
 
+export async function joinChallenge(challenge: Challenge, user: ICUser): Promise<void> {
+  const batch = writeBatch(db);
+
+  batch.set(doc(db, 'challenges', challenge.id), {
+    users: [...challenge.users, user.id]
+  }, { merge: true });
+
+  batch.set(doc(db, 'participants', genKey()), {
+    challengeId: challenge.id,
+    userId: user.id,
+    name: user.name,
+    daysCompleted: [],
+  });
+
+  batch.set(doc(db, 'users', user.id), {
+    challenges: [...user.challenges, challenge.id],
+  }, { merge: true });
+
+  await batch.commit();
+}
+
 export async function fetchParticipants(challengeId: string): Promise<Participant[]> {
   const snapshot = await getDocs(
     query(collection(db, 'participants'),
@@ -60,6 +82,7 @@ export async function createInvite(invite: PartialBy<Invite, 'id' | 'expires' | 
 }
 
 export async function sendText(to: string, body: string): Promise<DocumentReference> {
+  // log this in a database so you cannot send more than 3 texts per day
   return addDoc(collection(db, 'messages'), {
     to,
     body,
