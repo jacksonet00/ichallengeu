@@ -7,7 +7,30 @@ declare global {
   }
 }
 
+export interface ICUserDocument {
+  name: string;
+  phone: string;
+  profilePhotoUrl: string | null;
+}
+
+export class ICUser {
+  id: string;
+  name: string;
+  phone: string;
+  profilePhotoUrl: string | null;
+
+  constructor(doc: DocumentSnapshot<DocumentData>) {
+    const { name, phone, profilePhotoUrl } = doc.data()! as ICUserDocument;
+
+    this.id = doc.id;
+    this.name = name;
+    this.phone = phone;
+    this.profilePhotoUrl = profilePhotoUrl;
+  }
+};
+
 export interface ChallengeDocument {
+  ownerId: string;
   name: string;
   startDate: Timestamp;
   dayCount: number;
@@ -15,14 +38,16 @@ export interface ChallengeDocument {
 
 export class Challenge {
   id: string;
+  ownerId: string;
   name: string;
   startDate: Date;
   dayCount: number;
 
   constructor(doc: DocumentSnapshot<DocumentData>) {
-    const { name, startDate, dayCount } = doc.data()! as ChallengeDocument;
+    const { ownerId, name, startDate, dayCount } = doc.data()! as ChallengeDocument;
 
     this.id = doc.id;
+    this.ownerId = ownerId;
     this.name = name;
     this.startDate = startDate.toDate();
     this.dayCount = dayCount;
@@ -39,7 +64,6 @@ export class Challenge {
     return daysBetween(this.startDate) + 1;
   }
 };
-
 
 export interface ParticipantDocument {
   name: string;
@@ -62,16 +86,6 @@ export class Participant {
     this.daysCompleted = daysCompleted;
   }
 };
-
-export class Streak {
-  length: number;
-  includesToday: boolean;
-
-  constructor() {
-    this.length = 0;
-    this.includesToday = false;
-  }
-}
 
 export interface SerializedLeaderboardData {
   participantId: string;

@@ -1,18 +1,19 @@
+import { fetchUser } from '@/api';
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { auth } from '../../firebase';
 
 function mountRecaptchaVerifier() {
-  window.recaptchaVerifier = new RecaptchaVerifier(
-    auth,
-    "recaptcha-container",
-    {
-      size: "invisible",
-    },
-  );
-
-  window.recaptchaVerifier.verify();
+  if (!window.recaptchaVerifier) {
+    window.recaptchaVerifier = new RecaptchaVerifier(
+      auth,
+      "recaptcha-container",
+      {
+        size: "invisible",
+      },
+    );
+  }
 };
 
 export default function Login() {
@@ -26,6 +27,7 @@ export default function Login() {
 
   async function validatePhone(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    window.recaptchaVerifier.verify();
 
     const appVerifier = await window.recaptchaVerifier;
     const _confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
@@ -35,13 +37,26 @@ export default function Login() {
 
   async function validateCode(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    confirmationResult?.confirm(code).then(() => {
+    confirmationResult?.confirm(code).then(async (userCredential) => {
+
+      const user = await fetchUser(userCredential.user.uid);
+
+      if (!user) {
+        router.push({
+          pathname: '/signup',
+          query: {
+            next: router.query.next || '/',
+          }
+        });
+        return;
+      }
+
       if (router.query.next) {
         router.push(router.query.next as string);
+        return;
       }
-      else {
-        router.push('/');
-      }
+
+      router.push('/');
     });
   }
 

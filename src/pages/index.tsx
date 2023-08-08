@@ -1,16 +1,11 @@
+import { fetchChallenges } from '@/api';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
 import { logEvent } from "firebase/analytics";
-import { collection, getDocs, query } from "firebase/firestore";
 import Link from "next/link";
 import { useQuery } from 'react-query';
 import { Challenge } from "../data";
-import { db, getAnalyticsSafely } from '../firebase';
-
-async function fetchChallenges() {
-  const snapshot = await getDocs(query(collection(db, 'challenges')));
-  return snapshot.docs.map(doc => new Challenge(doc));
-}
+import { getAnalyticsSafely } from '../firebase';
 
 function renderChallengeList(challenges: Challenge[]) {
   return challenges.map((challenge) => (
