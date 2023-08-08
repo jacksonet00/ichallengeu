@@ -10,3 +10,15 @@ Create custom leaderboards to compete with friends!
 - Check back to see a leaderboard ranking participants based on their current streak and total completions.
 - When the challenge ends, the leaderboard will be updated with a trophy case featuring the winners of the challenge.
 - Have fun!
+
+## todos
+
+- Implement photo uploader
+  - Implement for prof pic
+  - Implement for evidence 
+- Implement invite links
+- Implement text system
+  - Implement for invites
+  - Implement for reminder CRON job
+- Styling
+- Deployment
