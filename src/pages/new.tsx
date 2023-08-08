@@ -1,8 +1,10 @@
 import { createChallenge, fetchUser } from '@/api';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
-import { auth } from '@/firebase';
+import { ParticipantDocument } from '@/data';
+import { auth, db } from '@/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { addDoc, collection } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -11,7 +13,7 @@ export default function NewChallengeForm() {
   const router = useRouter();
 
   const {
-    // data: user,
+    data: user,
     isLoading: isLoadingUser,
   } = useQuery('me', () => fetchUser(auth.currentUser!.uid));
 
@@ -19,7 +21,14 @@ export default function NewChallengeForm() {
     mutate: _createChallenge,
   } = useMutation({
     mutationFn: createChallenge,
-    onSuccess: (challengeId) => {
+    onSuccess: async (challengeId) => {
+      addDoc(collection(db, 'participants'), {
+        challengeId,
+        daysCompleted: [],
+        name: user!.name,
+        userId: auth.currentUser!.uid,
+      } as ParticipantDocument);
+
       router.push({
         pathname: '/leaderboard',
         query: {
