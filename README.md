@@ -17,7 +17,7 @@ Create custom leaderboards to compete with friends!
   - Implement for prof pic (done)
   - Implement for evidence 
 - Implement invite links (done, mvp)
-- Implement text system
+- Implement text system (done)
   - Implement for invites
   - Implement for reminder CRON job
 - Styling

@@ -45,3 +45,21 @@ export async function fetchParticipants(challengeId: string): Promise<Participan
       where('challengeId', '==', challengeId)));
   return snapshot.docs.map(doc => new Participant(doc));
 }
+
+export interface TextMessage {
+  to: string;
+  from: string;
+  body: string;
+}
+
+export async function sendText({
+  to,
+  from,
+  body,
+}: TextMessage) {
+  addDoc(collection(db, 'messages'), {
+    to,
+    from,
+    body,
+  });
+}
