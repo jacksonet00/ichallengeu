@@ -13,7 +13,7 @@ Create custom leaderboards to compete with friends!
 
 ## todos
 
-- Implement photo uploader
+- Implement photo uploader (done)
   - Implement for prof pic
   - Implement for evidence 
 - Implement invite links
