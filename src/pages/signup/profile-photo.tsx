@@ -27,7 +27,7 @@ export default function ProfilePhoto() {
   });
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setLoading(true);
         router.push({
@@ -48,6 +48,7 @@ export default function ProfilePhoto() {
         setLoading(false);
       }
     });
+    return unsubscribe();
   }, [router]);
 
   async function onSubmitPhoto(e: React.FormEvent<HTMLFormElement>) {

@@ -1,7 +1,7 @@
 import { fetchUser, updateUser } from '@/api';
 import Loading from '@/components/Loading';
 import { auth } from '@/firebase';
-import { onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from 'react-query';
@@ -27,7 +27,7 @@ export default function SignUp() {
   });
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setLoading(true);
         router.push({
@@ -48,6 +48,7 @@ export default function SignUp() {
         setLoading(false);
       }
     });
+    return unsubscribe();
   }, [router]);
 
   async function onSubmitUsername(e: React.FormEvent<HTMLFormElement>) {
