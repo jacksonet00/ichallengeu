@@ -1,4 +1,4 @@
-import { fetchChallenge, fetchUser, joinChallenge } from '@/api';
+import { fetchChallenge, fetchInvite, fetchUser, joinChallenge } from '@/api';
 import Loading from '@/components/Loading';
 import { Invite } from '@/data';
 import { auth, db } from '@/firebase';
@@ -6,14 +6,6 @@ import { doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-
-async function fetchInvite(inviteId: string): Promise<Invite | null> {
-  const snapshot = await getDoc(doc(db, 'invites', inviteId));
-  if (!snapshot.exists()) {
-    return null;
-  }
-  return new Invite(snapshot);
-}
 
 type JoiningStatus = 'Waiting...' | 'Searching...' | 'Joining...' | 'Joined!';
 

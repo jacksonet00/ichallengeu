@@ -71,9 +71,35 @@ export async function fetchParticipants(challengeId: string): Promise<Participan
   return snapshot.docs.map(doc => new Participant(doc));
 }
 
+export interface ParticipantMutationQuery {
+  userId: string;
+  challengeId: string;
+  participant: Partial<Participant>;
+}
+
+/** Merges provided fields with existing fields. */
+export async function updateParticipant({ userId, challengeId, participant }: ParticipantMutationQuery): Promise<void> {
+  const snapshot = await getDocs(query(collection(db, 'participants'), where('userId', '==', userId), where('challengeId', '==', challengeId)));
+
+  if (snapshot.empty || snapshot.docs.length > 1) {
+    throw new Error('Participant not found');
+  }
+
+  const ref = snapshot.docs[0].ref;
+  setDoc(ref, participant, { merge: true });
+}
+
 export async function createParticipant(participant: ParticipantDocument): Promise<string> {
   const ref = await addDoc(collection(db, 'participants'), participant);
   return ref.id;
+}
+
+export async function fetchInvite(inviteId: string): Promise<Invite | null> {
+  const snapshot = await getDoc(doc(db, 'invites', inviteId));
+  if (!snapshot.exists()) {
+    return null;
+  }
+  return new Invite(snapshot);
 }
 
 export async function createInvite(invite: PartialBy<Invite, 'id' | 'expires' | 'expiresAt'>): Promise<string> {
