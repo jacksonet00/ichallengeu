@@ -4,7 +4,6 @@ import LogoutButton from '@/components/LogoutButton';
 import { auth } from '@/firebase';
 import { stringToTimestamp } from '@/util';
 import { onAuthStateChanged } from 'firebase/auth';
-import { Timestamp } from 'firebase/firestore';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
@@ -44,7 +43,7 @@ export default function NewChallengeForm() {
   const [startDate, setStartDate] = useState('');
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setLoading(true);
         router.push({
@@ -56,6 +55,7 @@ export default function NewChallengeForm() {
         setLoading(false);
       }
     });
+    return unsubscribe();
   }, [router]);
 
   async function onSubmitChallengeForm(e: React.FormEvent<HTMLFormElement>) {

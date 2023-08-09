@@ -3,6 +3,7 @@ import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'fi
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { auth } from '../firebase';
+import Loading from '@/components/Loading';
 
 function mountRecaptchaVerifier() {
   if (!window.recaptchaVerifier) {
@@ -19,6 +20,11 @@ function mountRecaptchaVerifier() {
 export default function Login() {
   const router = useRouter();
 
+  const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState<'PHONE' | 'CODE'>('PHONE');
+
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const [phone, setPhone] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [code, setCode] = useState('');
@@ -27,20 +33,41 @@ export default function Login() {
 
   async function validatePhone(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    await window.recaptchaVerifier.verify();
+    
+    setLoading(true);
 
+    // todo regex check phone number
+
+    await window.recaptchaVerifier.verify();
+    // todo: handle bad phone number error
     const _confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
     setConfirmationResult(_confirmationResult);
+
+    setStep('CODE');
+    setErrorMessage(null);
+    setLoading(false);
   }
 
   async function validateCode(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
+    setLoading(true);
+
+    if (/^[0-9]{6}$/.test(code)) {
+      setErrorMessage("Code must be 6 digits.");
+      return;
+    }
+
     const userCredential = await confirmationResult!.confirm(code);
+
+    if (!userCredential) {
+      setErrorMessage("Incorrect code!");
+      return;
+    }
+
     const user = await fetchUser(userCredential.user.uid);
 
     const next = router.query.next as string || '/';
-
     if (!user) {
       router.push({
         pathname: '/signup',
@@ -50,14 +77,26 @@ export default function Login() {
       });
       return;
     }
-
     router.push(next);
+  }
+
+  function handleBack() {
+    setLoading(true);
+    setCode('');
+    setConfirmationResult(null);
+    setStep('PHONE');
+    setErrorMessage(null);
+    setLoading(false);
+  }
+
+  if (loading) {
+    return <Loading />;
   }
 
   return (
     <div>
       <h1>Login</h1>
-      <form onSubmit={validatePhone}>
+      {step === 'PHONE' && <form onSubmit={validatePhone}>
         <input
           type="tel"
           name="phone"
@@ -66,8 +105,9 @@ export default function Login() {
           onChange={e => setPhone(e.target.value)}
         />
         <button type="submit">next</button>
-      </form>
-      {confirmationResult && (
+        {errorMessage && <h1>{errorMessage}</h1>}
+      </form>}
+      {confirmationResult && step === 'CODE' && (
         <form onSubmit={validateCode}>
           <input
             type="text"
@@ -76,7 +116,9 @@ export default function Login() {
             value={code}
             onChange={e => setCode(e.target.value)}
           />
+          <button onClick={handleBack}>back</button>
           <button type="submit">verify</button>
+          {errorMessage && <h1>{errorMessage}</h1>}
         </form>
       )}
       <div id="recaptcha-container"></div>
