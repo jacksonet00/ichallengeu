@@ -23,6 +23,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'PHONE' | 'CODE'>('PHONE');
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const [phone, setPhone] = useState('');
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [code, setCode] = useState('');
@@ -34,12 +36,15 @@ export default function Login() {
     
     setLoading(true);
 
+    // todo regex check phone number
+
     await window.recaptchaVerifier.verify();
     // todo: handle bad phone number error
     const _confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
     setConfirmationResult(_confirmationResult);
 
     setStep('CODE');
+    setErrorMessage(null);
     setLoading(false);
   }
 
@@ -48,10 +53,16 @@ export default function Login() {
 
     setLoading(true);
 
+    if (/^[0-9]{6}$/.test(code)) {
+      setErrorMessage("Code must be 6 digits.");
+      return;
+    }
+
     const userCredential = await confirmationResult!.confirm(code);
 
     if (!userCredential) {
-      // todo: handle incorrect code error
+      setErrorMessage("Incorrect code!");
+      return;
     }
 
     const user = await fetchUser(userCredential.user.uid);
@@ -67,6 +78,15 @@ export default function Login() {
       return;
     }
     router.push(next);
+  }
+
+  function handleBack() {
+    setLoading(true);
+    setCode('');
+    setConfirmationResult(null);
+    setStep('PHONE');
+    setErrorMessage(null);
+    setLoading(false);
   }
 
   if (loading) {
@@ -85,6 +105,7 @@ export default function Login() {
           onChange={e => setPhone(e.target.value)}
         />
         <button type="submit">next</button>
+        {errorMessage && <h1>{errorMessage}</h1>}
       </form>}
       {confirmationResult && step === 'CODE' && (
         <form onSubmit={validateCode}>
@@ -95,12 +116,9 @@ export default function Login() {
             value={code}
             onChange={e => setCode(e.target.value)}
           />
-          <button onClick={() => {
-            setCode('');
-            setConfirmationResult(null);
-            setStep('PHONE');
-          }}>back</button>
+          <button onClick={handleBack}>back</button>
           <button type="submit">verify</button>
+          {errorMessage && <h1>{errorMessage}</h1>}
         </form>
       )}
       <div id="recaptcha-container"></div>
