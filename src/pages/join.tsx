@@ -43,8 +43,8 @@ export default function Join() {
     setStatus('Searching...');
 
     // User is not authenticated
-    if (!auth.currentUser) {
-      router.push({
+    if (!auth.currentUser) { // todo: show some message letting the user know to sign up for an account before they join
+      router.push({          // or maybe do this redirect after they choose join
         pathname: '/login',
         query: {
           next: `/join?inviteId=${invite.id}`,
@@ -92,7 +92,7 @@ export default function Join() {
 
   return (
     <div className='flex flex-col items-center'>
-      <h1>{invite!.senderId} has invited you to join {challenge!.name}!</h1>
+      <h1>{invite!.senderName} has invited you to join {challenge!.name}!</h1>
       <h1>Would you like to accept?</h1>
       <button onClick={handleJoinChallenge}>Join</button>
     </div>
