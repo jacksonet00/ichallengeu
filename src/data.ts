@@ -36,6 +36,7 @@ export class ICUser {
 export interface InviteDocument {
   challengeId: string;
   senderId: string;
+  senderName: string;
   expires: boolean;
   expiresAt: Timestamp | null;
 }
@@ -43,15 +44,17 @@ export interface InviteDocument {
 export class Invite {
   id: string;
   senderId: string;
+  senderName: string;
   challengeId: string;
   expires: boolean;
   expiresAt: Date | null;
 
   constructor(doc: DocumentSnapshot<DocumentData>) {
-    const { senderId, challengeId, expires, expiresAt } = doc.data()! as InviteDocument;
+    const { senderId, senderName, challengeId, expires, expiresAt } = doc.data()! as InviteDocument;
 
     this.id = doc.id;
     this.senderId = senderId;
+    this.senderName = senderName;
     this.challengeId = challengeId;
     this.expires = expires;
     this.expiresAt = expiresAt?.toDate() ?? null;

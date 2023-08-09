@@ -1,7 +1,8 @@
 import { DocumentReference, addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
 import { Challenge, ChallengeDocument, ICUser, Invite, Participant, ParticipantDocument } from './data';
-import { db } from './firebase';
+import { auth, db } from './firebase';
 import { genKey } from './util';
+import { updateProfile } from 'firebase/auth';
 
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
@@ -21,6 +22,18 @@ export interface ICUserMutationQuery {
 
 /** Merges provided fields with existing fields. */
 export async function updateUser({ uid, user }: ICUserMutationQuery): Promise<void> {
+  if (user.name && auth.currentUser!.displayName !== user.name) {
+    await updateProfile(auth.currentUser!, {
+      displayName: user.name,
+    });
+  }
+
+  if (user.profilePhotoUrl && auth.currentUser!.photoURL !== user.profilePhotoUrl) {
+    await updateProfile(auth.currentUser!, {
+      photoURL: user.profilePhotoUrl,
+    });
+  }
+
   setDoc(doc(db, 'users', uid), user, { merge: true });
 }
 
@@ -74,6 +87,14 @@ export async function fetchParticipants(challengeId: string): Promise<Participan
 export async function createParticipant(participant: ParticipantDocument): Promise<string> {
   const ref = await addDoc(collection(db, 'participants'), participant);
   return ref.id;
+}
+
+export async function fetchInvite(inviteId: string): Promise<Invite | null> {
+  const snapshot = await getDoc(doc(db, 'invites', inviteId));
+  if (!snapshot.exists()) {
+    return null;
+  }
+  return new Invite(snapshot);
 }
 
 export async function createInvite(invite: PartialBy<Invite, 'id' | 'expires' | 'expiresAt'>): Promise<string> {

@@ -63,6 +63,7 @@ export default function Leaderboard() {
     const inviteId = await createInvite({
       challengeId: challenge!.id,
       senderId: auth.currentUser!.uid,
+      senderName: auth.currentUser!.displayName!,
     });
 
     navigator.clipboard.writeText(`${window.location.origin}/join?inviteId=${inviteId}`);

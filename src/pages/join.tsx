@@ -1,19 +1,9 @@
-import { fetchChallenge, fetchUser, joinChallenge } from '@/api';
+ import { fetchChallenge, fetchInvite, fetchUser, joinChallenge } from '@/api';
 import Loading from '@/components/Loading';
-import { Invite } from '@/data';
-import { auth, db } from '@/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { auth } from '@/firebase';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-
-async function fetchInvite(inviteId: string): Promise<Invite | null> {
-  const snapshot = await getDoc(doc(db, 'invites', inviteId));
-  if (!snapshot.exists()) {
-    return null;
-  }
-  return new Invite(snapshot);
-}
 
 type JoiningStatus = 'Waiting...' | 'Searching...' | 'Joining...' | 'Joined!';
 
@@ -21,6 +11,7 @@ export default function Join() {
   const router = useRouter();
 
   const [status, setStatus] = useState<JoiningStatus | null>('Waiting...');
+  const [isJoiningChallenge, setIsJoiningChallenge] = useState(false);
 
   const {
     data: invite,
@@ -51,6 +42,7 @@ export default function Join() {
 
     setStatus('Searching...');
 
+    // User is not authenticated
     if (!auth.currentUser) {
       router.push({
         pathname: '/login',
@@ -77,33 +69,32 @@ export default function Join() {
       setStatus('Waiting...');
       return;
     }
+  }, [router, invite, challenge, user]);
 
+  function handleJoinChallenge() {
+    setIsJoiningChallenge(true);
     setStatus('Joining...');
 
-    joinChallenge(challenge, user).then(() => {
+    joinChallenge(challenge!, user!).then(() => {
       setStatus('Joined!');
       router.push({
         pathname: '/leaderboard',
         query: {
-          challengeId: challenge.id,
+          challengeId: challenge!.id,
         },
       });
     });
-  }, [router, invite, challenge, user]);
+  }
 
-  if (isLoadingInvite || isLoadingChallenge || isLoadingUser) {
-    return (
-      <div className='flex flex-col items-center'>
-        <Loading />
-        <h1 className="mt-4">{status}</h1>
-      </div>
-    )
+  if (isLoadingInvite || isLoadingChallenge || isLoadingUser || isJoiningChallenge) {
+    return <Loading status={status} />;
   }
 
   return (
     <div className='flex flex-col items-center'>
-      <Loading />
-      <h1 className="mt-4">{status}</h1>
+      <h1>{invite!.senderId} has invited you to join {challenge!.name}!</h1>
+      <h1>Would you like to accept?</h1>
+      <button onClick={handleJoinChallenge}>Join</button>
     </div>
   );
 }

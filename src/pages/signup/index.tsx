@@ -53,10 +53,6 @@ export default function SignUp() {
   async function onSubmitUsername(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    await updateProfile(auth.currentUser!, {
-      displayName: username
-    });
-
     _updateUser({
       uid: auth.currentUser!.uid,
       user: {

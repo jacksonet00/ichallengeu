@@ -23,6 +23,7 @@ export default function PhoneInviteForm({
     const inviteId = await createInvite({
       challengeId,
       senderId: auth.currentUser!.uid,
+      senderName,
       expires,
       expiresAt: timestampToDate(expiresAt),
     });

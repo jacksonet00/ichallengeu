@@ -53,10 +53,6 @@ export default function ProfilePhoto() {
   async function onSubmitPhoto(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
 
-    await updateProfile(auth.currentUser!, {
-      photoURL: photoUrl,
-    });
-
     _updateUser({
       uid: auth.currentUser!.uid,
       user: {
