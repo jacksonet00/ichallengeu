@@ -13,23 +13,23 @@ export default function ProgressBars({
         currentStreakIncludesToday,
         bestStreakLength,
         totalCompletions,
-        currentDay,
+        challenge,
     } = leaderboardData;
 
     return (
         <ChakraProvider>
             <Progress
                 colorScheme="yellow"
-                value={(currentStreakLength / currentDay) *
+                value={(currentStreakLength / challenge.currentDay()) *
                     (currentStreakIncludesToday ? 1 : 0) * 100}
             />
             <Progress
                 colorScheme="blue"
-                value={(bestStreakLength / currentDay) * 100}
+                value={(bestStreakLength / challenge.currentDay()) * 100}
             />
             <Progress
                 colorScheme="gray"
-                value={(totalCompletions / currentDay) * 100}
+                value={(totalCompletions / challenge.currentDay()) * 100}
             />
         </ChakraProvider>
     );
