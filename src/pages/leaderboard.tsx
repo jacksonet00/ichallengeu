@@ -33,6 +33,7 @@ export default function Leaderboard() {
     enabled: !!challengeId && !!auth.currentUser,
     onSuccess: () => {
       queryClient.invalidateQueries(['leaderboard', challengeId]);
+      setLoading(false);
     }
   });
 
@@ -51,10 +52,6 @@ export default function Leaderboard() {
       queryClient.invalidateQueries(['leaderboard', challengeId]);
       queryClient.invalidateQueries(['participants', challengeId]);
     },
-    onSettled: () => {
-      setLoading(false);
-    },
-
   })
 
   const analytics = getAnalyticsSafely();
