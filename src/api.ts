@@ -1,5 +1,5 @@
 import { DocumentReference, addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
-import { Challenge, ChallengeDocument, ICUser, Invite, Participant, ParticipantDocument } from './data';
+import { Challenge, ChallengeDocument, ICUser, Invite, LeaderboardData, Participant, ParticipantDocument } from './data';
 import { auth, db } from './firebase';
 import { genKey } from './util';
 import { updateProfile } from 'firebase/auth';
@@ -38,15 +38,35 @@ export async function updateUser({ uid, user }: ICUserMutationQuery): Promise<vo
 }
 
 export async function fetchChallenge(challengeId: string): Promise<Challenge | null> {
+  if (!challengeId) {
+    return null;
+  }
+
   const snapshot = await getDoc(doc(db, 'challenges', challengeId));
+
   if (!snapshot.exists()) {
     return null;
   }
+
   return new Challenge(snapshot);
 }
 
 export async function fetchChallenges(): Promise<Challenge[]> {
   const snapshot = await getDocs(query(collection(db, 'challenges')));
+  return snapshot.docs.map(doc => new Challenge(doc));
+}
+
+export async function fetchMyChallenges(userId: string): Promise<Challenge[]> {
+  if (!userId) {
+    return [];
+  }
+
+  const snapshot = await getDocs(query(collection(db, 'challenges'), where('users', 'array-contains', userId)));
+
+  if (snapshot.empty) {
+    return [];
+  }
+
   return snapshot.docs.map(doc => new Challenge(doc));
 }
 
@@ -84,6 +104,22 @@ export async function fetchParticipants(challengeId: string): Promise<Participan
   return snapshot.docs.map(doc => new Participant(doc));
 }
 
+export async function fetchParticipant(challengeId: string, userId: string): Promise<Participant | null> {
+  if (!challengeId || !userId) {
+    return null;
+  }
+
+  const snapshot = await getDocs(query(collection(db, 'participants'),
+    where('userId', '==', userId), where('challengeId', '==', challengeId)));
+
+  if (snapshot.empty || snapshot.docs.length > 1) {
+    return null;
+  }
+
+  return new Participant(snapshot.docs[0]);
+}
+
+
 export interface ParticipantMutationQuery {
   userId: string;
   challengeId: string;
@@ -118,6 +154,15 @@ export async function fetchInvite(inviteId: string): Promise<Invite | null> {
 export async function createInvite(invite: PartialBy<Invite, 'id' | 'expires' | 'expiresAt'>): Promise<string> {
   const ref = await addDoc(collection(db, 'invites'), invite);
   return ref.id;
+}
+
+export async function fetchLeaderboardData(challengeId: string): Promise<LeaderboardData[]> {
+  const [challenge, participants] = await Promise.all([
+    fetchChallenge(challengeId),
+    fetchParticipants(challengeId),
+  ]);
+
+  return participants.map(p => new LeaderboardData(p, challenge!));
 }
 
 export async function sendText(to: string, body: string): Promise<DocumentReference> {

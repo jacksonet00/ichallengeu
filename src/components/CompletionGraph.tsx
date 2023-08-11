@@ -7,6 +7,12 @@ export default function CompletionGraph({ data }: { data: number[]; }) {
     useEffect(() => {
         const ctx = (canvasEl.current as any).getContext("2d");
 
+        const graphData = [...data];
+
+        if (graphData.length < 2) {
+            graphData.push(...Array(2 - graphData.length).fill(0));
+        }
+
         const gradient = ctx.createLinearGradient(0, 16, 0, 600);
         gradient.addColorStop(0, "rgba(149, 76, 233, 0.5)");
         gradient.addColorStop(0.65, "rgba(149, 76, 233, 0.25)");
@@ -15,10 +21,10 @@ export default function CompletionGraph({ data }: { data: number[]; }) {
         const myLineChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: data.map((d, i) => `Day ${i + 1}`),
+                labels: graphData.map((d, i) => `Day ${i + 1}`),
                 datasets: [{
                     label: 'Current Streak',
-                    data,
+                    data: graphData,
                     fill: false,
                     tension: 0.1,
                     borderWidth: 1,
@@ -30,7 +36,7 @@ export default function CompletionGraph({ data }: { data: number[]; }) {
                     y: {
                         display: false,
                         beginAtZero: true,
-                        max: Math.max(...data) + 0.1 * Math.max(...data),
+                        max: Math.max(...graphData) + 0.1 * Math.max(...graphData),
                     },
                 },
                 plugins: {

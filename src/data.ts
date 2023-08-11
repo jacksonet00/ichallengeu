@@ -148,6 +148,8 @@ export class LeaderboardData {
     this.challenge = challenge;
     this.totalCompletions = participant.daysCompleted.length;
 
+    const currentDay = challenge.currentDay() - 1;
+
     let graph = [];
     let curr = 0;
     let best = curr;
@@ -164,7 +166,7 @@ export class LeaderboardData {
       graph.push(curr);
       i++;
     }
-    while (i < this.challenge.currentDay()) {
+    while (i < currentDay) {
       graph.push(0);
       i++;
     }
@@ -173,12 +175,12 @@ export class LeaderboardData {
     this.lineChart = graph;
     this.bestStreakLength = best;
 
-    if (participant.daysCompleted.at(-1)! === this.challenge.currentDay()) {
+    if (participant.daysCompleted.at(-1)! === currentDay) {
       this.currentStreakLength = this.lineChart.at(-1)!;
       this.currentStreakIncludesToday = true;
     }
 
-    if (participant.daysCompleted.at(-1)! === this.challenge.currentDay() - 1) {
+    if (participant.daysCompleted.at(-1)! === currentDay - 1) {
       this.currentStreakLength = this.lineChart.at(-1)!;
     }
   }

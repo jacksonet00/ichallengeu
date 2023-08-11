@@ -2,7 +2,7 @@ import { createChallenge, createParticipant, fetchUser } from '@/api';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
 import { auth } from '@/firebase';
-import { stringToTimestamp } from '@/util';
+import { dateToTimestamp, stringToTimestamp, timestampToDate } from '@/util';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -38,9 +38,11 @@ export default function NewChallengeForm() {
   });
 
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const [challengeName, setChallengeName] = useState('');
-  const [dayCount, setDayCount] = useState(0);
-  const [startDate, setStartDate] = useState('');
+  const [dayCount, setDayCount] = useState(3);
+  // const [startDate, setStartDate] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -60,11 +62,26 @@ export default function NewChallengeForm() {
 
   async function onSubmitChallengeForm(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+
+    // const _startDate = new Date(startDate);
+    // _startDate.setHours(0, 0, 0, 0);
+
+    if (dayCount < 3) {
+      setErrorMessage('Challenge must be at least 3 days long.');
+      return;
+    }
+    else {
+      setErrorMessage(null);
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     _createChallenge({
       ownerId: auth.currentUser!.uid,
       name: challengeName,
       dayCount,
-      startDate: stringToTimestamp(startDate)!,
+      startDate: dateToTimestamp(today)!,
       users: [auth.currentUser!.uid],
     });
   }
@@ -90,19 +107,21 @@ export default function NewChallengeForm() {
           type="number"
           placeholder="dayCount"
           value={dayCount}
+          min={3}
           onChange={(e) => setDayCount(parseInt(e.target.value))}
         />
-        <input
+        {/* <input
           type="date"
           placeholder="startDate"
           value={startDate}
           onChange={(e) => setStartDate(e.target.value)}
-        />
+        /> */}
         <button
           type="submit"
         >
           Create
         </button>
+        {errorMessage && <h1>{errorMessage}</h1>}
       </form>
     </div>
   );

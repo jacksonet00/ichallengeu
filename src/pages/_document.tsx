@@ -11,6 +11,7 @@ export default function Document() {
           <Main />
           <NextScript />
         </div>
+        <div id="recaptcha-container"></div>
       </body>
     </Html>
   )

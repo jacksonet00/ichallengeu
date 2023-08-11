@@ -53,15 +53,17 @@ export default function Login() {
 
     setLoading(true);
 
-    if (/^[0-9]{6}$/.test(code)) {
-      setErrorMessage("Code must be 6 digits.");
-      return;
-    }
+    // if (code.match(/^[0-9]{6}$/)) {
+    //   setErrorMessage("Code must be 6 digits.");
+    //   setLoading(false);
+    //   return;
+    // }
 
     const userCredential = await confirmationResult!.confirm(code);
 
     if (!userCredential) {
       setErrorMessage("Incorrect code!");
+      setLoading(false);
       return;
     }
 
@@ -121,7 +123,6 @@ export default function Login() {
           {errorMessage && <h1>{errorMessage}</h1>}
         </form>
       )}
-      <div id="recaptcha-container"></div>
     </div>
   );
 }

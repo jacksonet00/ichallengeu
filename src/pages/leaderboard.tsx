@@ -1,4 +1,4 @@
-import { createInvite, fetchChallenge, fetchParticipants, updateParticipant } from '@/api';
+import { createInvite, fetchChallenge, fetchLeaderboardData, fetchParticipant, updateParticipant } from '@/api';
 import CompletionToggle from '@/components/CompletionToggle';
 import IconExplainer from '@/components/IconExplainer';
 import LeaderboardEntry from '@/components/LeaderboardEntry';
@@ -6,24 +6,11 @@ import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
 import PhoneInviteForm from '@/components/PhoneInviteForm';
 import TrophyCase from '@/components/TrophyCase';
-import { LeaderboardData } from '@/data';
 import { auth, getAnalyticsSafely } from '@/firebase';
-import { genKey } from '@/util';
 import { logEvent } from 'firebase/analytics';
-import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
-
-function renderLeaderboard(leaderboard: LeaderboardData[]) {
-  return leaderboard.map((leaderboardData, index) => (
-    <LeaderboardEntry
-      key={genKey()}
-      crown={index === 0}
-      leaderboardData={leaderboardData}
-    />
-  ));
-}
 
 export default function Leaderboard() {
   const router = useRouter();
@@ -31,9 +18,7 @@ export default function Leaderboard() {
 
   const { challengeId } = router.query as { challengeId: string; };
 
-  const [isMember, setIsMember] = useState(false);
-  const [isOwner, setIsOwner] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const {
     data: challenge,
@@ -41,59 +26,47 @@ export default function Leaderboard() {
   } = useQuery(['challenges', challengeId], () => fetchChallenge(challengeId));
 
   const {
-    data: participants,
-    isLoading: isLoadingParticipants,
-  } = useQuery(['participants', challengeId], () => fetchParticipants(challengeId!));
+    data: participant,
+    isLoading: isLoadingParticipant,
+    refetch: refetchParticipant,
+  } = useQuery(['participants', challengeId], () => fetchParticipant(challengeId, auth.currentUser?.uid || ''), {
+    enabled: !!challengeId && !!auth.currentUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries(['leaderboard', challengeId]);
+    }
+  });
+
+  const {
+    data: leaderboard,
+    isLoading: isLoadingLeaderboard,
+  } = useQuery(['leaderboard', challengeId], () => fetchLeaderboardData(challengeId!), {
+    enabled: !!challengeId,
+  });
 
   const {
     mutate: _updateParticipant,
   } = useMutation({
     mutationFn: updateParticipant,
     onSuccess: () => {
+      queryClient.invalidateQueries(['leaderboard', challengeId]);
       queryClient.invalidateQueries(['participants', challengeId]);
-    }
+    },
+    onSettled: () => {
+      setLoading(false);
+    },
+
   })
 
   const analytics = getAnalyticsSafely();
 
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user && challenge && participants) {
-        setIsMember(challenge!.users.includes(user.uid));
-        setIsOwner(challenge!.ownerId === user.uid);
-
-        const participant = participants!.findLast(participant => participant.userId === user.uid && participant.challengeId === challengeId)!;
-
-        if (!participant) {
-          setIsCompleted(false);
-        }
-        else {
-          setIsCompleted(participant.daysCompleted.includes(challenge!.currentDay()));
-        }
-      }
-    });
-  }, [challenge, challengeId, participants]);
-
-  if (isLoadingChallenge || isLoadingParticipants) {
-    return <Loading />;
-  }
-
-  if (analytics) {
-    logEvent(analytics, 'page_view', {
-      page_title: `${challenge!.name} leaderboard`,
-      page_path: `/leaderboard/${challenge!.id}`
-    });
-  }
-
   async function toggleCompletion() {
-    const participant = participants!.findLast(participant => participant.userId === auth.currentUser!.uid && participant.challengeId === challengeId)!;
-
-    if (participant.daysCompleted.includes(challenge!.currentDay())) {
+    setLoading(true);
+    if (participant!.daysCompleted.includes(challenge!.currentDay() - 1)) {
       _updateParticipant({
         challengeId: challenge!.id,
         userId: auth.currentUser!.uid,
         participant: {
-          daysCompleted: participant.daysCompleted.filter(day => day !== challenge!.currentDay()),
+          daysCompleted: participant!.daysCompleted.filter(day => day !== challenge!.currentDay() - 1),
         },
       });
     }
@@ -102,7 +75,7 @@ export default function Leaderboard() {
         challengeId: challenge!.id,
         userId: auth.currentUser!.uid,
         participant: {
-          daysCompleted: [...participant.daysCompleted, challenge!.currentDay()],
+          daysCompleted: [...participant!.daysCompleted, challenge!.currentDay() - 1],
         },
       });
     }
@@ -118,30 +91,45 @@ export default function Leaderboard() {
     navigator.clipboard.writeText(`${window.location.origin}/join?inviteId=${inviteId}`);
   }
 
-  const leaderboard = participants!
-    .map(participant => new LeaderboardData(participant, challenge!))
-    .sort(LeaderboardData.compare);
+  if (!participant && !isLoadingParticipant) {
+    refetchParticipant();
+  }
 
-  const winners = leaderboard.slice(0, 3);
+  if (loading || isLoadingLeaderboard || isLoadingChallenge || isLoadingParticipant || !challenge || !leaderboard || !participant) {
+    return <Loading />;
+  }
+
+  if (analytics) {
+    logEvent(analytics, 'page_view', {
+      page_title: `${challenge!.name} leaderboard`,
+      page_path: `/leaderboard/${challenge!.id}`
+    });
+  }
 
   return (
     <div className="flex items-center justify-center flex-col">
       <LogoutButton />
-      {isOwner && <button onClick={copyInviteLink}>Copy Invite Link</button>}
-      {isOwner && <PhoneInviteForm
+      {challenge!.ownerId === auth.currentUser!.uid && <button onClick={copyInviteLink}>Copy Invite Link</button>}
+      {challenge!.ownerId === auth.currentUser!.uid && <PhoneInviteForm
         challengeId={challenge!.id}
         senderName={auth.currentUser!.displayName!}
       />}
-      {isMember && <CompletionToggle
-        completed={isCompleted}
+      {challenge!.users.includes(auth.currentUser!.uid) && <CompletionToggle
+        completed={participant!.daysCompleted.includes(challenge!.currentDay() - 1)}
         onToggle={toggleCompletion}
       />}
       <h1 className="font-bold mb-8">{challenge!.name}: Day #{challenge!.currentDay()}{`${challenge!.isCompleted() ? ' ✅' : ''}`}</h1>
       <div className="w-80 flex flex-col justify-start items-center mb-10">
-        {challenge!.isCompleted() ? <TrophyCase winners={winners} /> : <IconExplainer />}
+        {challenge!.isCompleted() ? <TrophyCase winners={leaderboard!.slice(0, 3)} /> : <IconExplainer />}
       </div>
       <div className="w-80 flex flex-col justify-start mb-10">
-        {renderLeaderboard(leaderboard)}
+        {leaderboard.map((leaderboardData, index) => (
+          <LeaderboardEntry
+            key={leaderboardData.participant.id}
+            crown={index === 0}
+            leaderboardData={leaderboardData}
+          />
+        ))}
       </div>
     </div>
   );

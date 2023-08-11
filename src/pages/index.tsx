@@ -1,11 +1,13 @@
-import { fetchChallenges } from '@/api';
+import { fetchChallenges, fetchMyChallenges } from '@/api';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
 import { logEvent } from "firebase/analytics";
 import Link from "next/link";
 import { useQuery } from 'react-query';
 import { Challenge } from "../data";
-import { getAnalyticsSafely } from '../firebase';
+import { auth, getAnalyticsSafely } from '../firebase';
+import { useEffect } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
 
 function renderChallengeList(challenges: Challenge[]) {
   return challenges.map((challenge) => (
@@ -22,7 +24,19 @@ function renderChallengeList(challenges: Challenge[]) {
 }
 
 export default function Home() {
-  const { data: challenges, isLoading } = useQuery('challenges', fetchChallenges);
+  const { data: challenges, isLoading, refetch } = useQuery('challenges', () => fetchMyChallenges(auth.currentUser?.uid || ''), {
+    enabled: !!auth.currentUser,
+    initialData: [],
+  });
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        refetch();
+      }
+    });
+    return unsubscribe();
+  }, [refetch]);
 
   const analytics = getAnalyticsSafely();
   if (analytics) {
