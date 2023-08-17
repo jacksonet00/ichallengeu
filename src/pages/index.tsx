@@ -53,6 +53,14 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center justify-start">
       <LogoutButton />
+      <div
+        className="bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center mb-8"
+      >
+        <Link href={{
+          pathname: '/new',
+        }}>Start a New Challenge</Link>
+      </div>
+      {challenges && challenges?.length > 0 && <h1 className="text-2xl font-bold mb-8">My Challenges</h1>}
       {renderChallengeList(challenges!)}
     </div>
   );
