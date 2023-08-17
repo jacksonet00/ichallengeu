@@ -162,7 +162,9 @@ export async function fetchLeaderboardData(challengeId: string): Promise<Leaderb
     fetchParticipants(challengeId),
   ]);
 
-  return participants.map(p => new LeaderboardData(p, challenge!));
+  return participants
+    .map(p => new LeaderboardData(p, challenge!))
+    .sort(LeaderboardData.compare);
 }
 
 export async function sendText(to: string, body: string): Promise<DocumentReference> {
