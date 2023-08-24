@@ -1,0 +1,1 @@
+export const DEFAULT_PROFILE_PHOTO_URL = "https://firebasestorage.googleapis.com/v0/b/ichallengeu-b8e90.appspot.com/o/profile-photos%2Fdefault%2Fdefault.jpg?alt=media&token=95c6ae65-e592-4f94-898f-b82c3cd44197";

@@ -13,14 +13,30 @@ Create custom leaderboards to compete with friends!
 
 ## todos
 
-- Implement photo uploader (done)
-  - Implement for prof pic (done)
-  - Implement for evidence -- move to stretch task
-- Implement invite links (done)
-- Implement text system (done)
-  - Implement for invites (done)
-  - Implement for reminder CRON job -- move to stretch task
-- Implement completions (done)
-- Styling
-- Analytics
-- Deployment
+- add profile photos to participants (done)
+- implement default profile photos (done)
+- add profile photos to leaderboard ui (done)
+- add edit banner to profile photo component (done)
+- clean up share sheet for leaderboard
+- bulletproof mark completed
+- add analytics to each page
+- write unit tests for core functionality
+  - build graph
+- deploy on vercel
+
+## stretch todos
+- nice success messages on profile
+- image cropping
+- image resizing
+- delete old profile photos on change
+- sorting challenges on homepage
+- ranking public challenges on homepage
+- build landing page to describe functionality if you aren't logged in
+
+## 1,000+ users todos
+- premium plan
+  - limit challenges to 25 participants for free tier
+  - unlimited on premium
+  - optionally require proof of completion
+  - set start date in future with countdown
+  - challenges that don't expire

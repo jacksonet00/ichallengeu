@@ -2,10 +2,12 @@ import { fetchUser } from '@/api';
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { auth } from '../firebase';
+import { auth, getAnalyticsSafely } from '../firebase';
 import Loading from '@/components/Loading';
+import ErrorMessage from '@/components/ErrorMessage';
+import { logEvent } from 'firebase/analytics';
 
-function mountRecaptchaVerifier() {
+function mountRecaptchaVerifier(): void {
   if (!window.recaptchaVerifier) {
     window.recaptchaVerifier = new RecaptchaVerifier(
       auth,
@@ -17,6 +19,26 @@ function mountRecaptchaVerifier() {
   }
 };
 
+function formatPhone(phone: string): { error: { message: string; } | null, phone: string | null; } {
+  if (!phone.match(/^\([0-9]{3}\) [0-9]{3}-[0-9]{4}$/) &&
+    !phone.match(/^[0-9]{3}-[0-9]{3}-[0-9]{4}$/) &&
+    !phone.match(/^[0-9]{10}$/) &&
+    !phone.match(/^[0-9]{3} [0-9]{3} [0-9]{4}$/) &&
+    !phone.match(/^[0-9]{3}\.[0-9]{3}\.[0-9]{4}$/)) {
+    return {
+      phone: null,
+      error: {
+        message: 'Invalid phone number.'
+      }
+    };
+  }
+
+  return {
+    phone: phone.replace(/\D/g, ''),
+    error: null
+  };
+}
+
 export default function Login() {
   const router = useRouter();
 
@@ -25,64 +47,97 @@ export default function Login() {
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState('+1');
+  const [rawPhoneString, setRawPhoneString] = useState('');
+
   const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
   const [code, setCode] = useState('');
 
   useEffect(mountRecaptchaVerifier, []);
 
-  async function validatePhone(e: React.FormEvent<HTMLFormElement>) {
+  async function validatePhone(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
-    
     setLoading(true);
 
-    // todo regex check phone number
+    const { phone, error } = formatPhone(rawPhoneString);
+    if (error) {
+      setErrorMessage(error.message);
+      setLoading(false);
+      return;
+    }
+    const formattedPhone = `${countryCode}${phone}`;
 
-    await window.recaptchaVerifier.verify();
-    // todo: handle bad phone number error
-    const _confirmationResult = await signInWithPhoneNumber(auth, phone, window.recaptchaVerifier);
-    setConfirmationResult(_confirmationResult);
+    try {
+      await window.recaptchaVerifier.verify();
+    }
+    catch (e) {
+      console.error(e);
+    }
 
-    setStep('CODE');
-    setErrorMessage(null);
-    setLoading(false);
+    try {
+      const _confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
+      setConfirmationResult(_confirmationResult);
+
+      setStep('CODE');
+      setErrorMessage(null);
+      setLoading(false);
+    }
+    catch (e) {
+      console.error(e);
+      setErrorMessage('Invalid phone number.');
+      setLoading(false);
+      return;
+    }
   }
 
-  async function validateCode(e: React.FormEvent<HTMLFormElement>) {
+  async function validateCode(e: React.FormEvent<HTMLFormElement>): Promise<void> {
     e.preventDefault();
-
     setLoading(true);
 
-    // if (code.match(/^[0-9]{6}$/)) {
-    //   setErrorMessage("Code must be 6 digits.");
-    //   setLoading(false);
-    //   return;
-    // }
-
-    const userCredential = await confirmationResult!.confirm(code);
-
-    if (!userCredential) {
-      setErrorMessage("Incorrect code!");
+    if (!code.match(/^[0-9]{6}$/)) {
+      setErrorMessage("Invalid code.");
       setLoading(false);
       return;
     }
 
-    const user = await fetchUser(userCredential.user.uid);
+    try {
+      const userCredential = await confirmationResult!.confirm(code);
 
-    const next = router.query.next as string || '/';
-    if (!user) {
-      router.push({
-        pathname: '/signup',
-        query: {
-          next
-        }
-      });
+      if (!userCredential) {
+        setErrorMessage("Incorrect code!");
+        setLoading(false);
+        return;
+      }
+
+      const user = await fetchUser(userCredential.user.uid);
+
+      if (!user) {
+        router.push({
+          pathname: '/signup/username',
+          query: {
+            next: router.query.next as string || '/',
+          }
+        });
+        return;
+      }
+    }
+    catch (e) {
+      setErrorMessage('Incorrect code!');
+      setLoading(false);
       return;
     }
-    router.push(next);
+
+    const analytics = getAnalyticsSafely();
+    if (analytics) {
+      logEvent(analytics, 'login', {
+        method: 'phone',
+      });
+    }
+
+    router.push(router.query.next as string || '/');
   }
 
-  function handleBack() {
+  function handleBack(): void {
     setLoading(true);
     setCode('');
     setConfirmationResult(null);
@@ -95,32 +150,75 @@ export default function Login() {
     return <Loading />;
   }
 
+  const analytics = getAnalyticsSafely();
+  if (analytics) {
+    logEvent(analytics!, 'page_view', {
+      page_title: 'login',
+      page_path: '/login',
+    });
+  }
+
   return (
     <div>
-      <h1>Login</h1>
-      {step === 'PHONE' && <form onSubmit={validatePhone}>
-        <input
-          type="tel"
-          name="phone"
-          placeholder="Phone number"
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-        />
-        <button type="submit">next</button>
-        {errorMessage && <h1>{errorMessage}</h1>}
+      {step === 'PHONE' &&
+        <form
+          onSubmit={validatePhone}
+        >
+          <div className='flex flex-col justify-center items-center'>
+            <div className='flex flex-row justify-center items-center mb-4'>
+              <select
+                className='mr-4'
+                value={countryCode}
+                onChange={e => setCountryCode(e.target.value)}
+              >
+                <option label="🇺🇸">+1</option>
+                <option label="🇨🇦">+61</option>
+                {/* todo: bring more countries online */}
+              </select>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="Phone number"
+                value={rawPhoneString}
+                onChange={e => setRawPhoneString(e.target.value)}
+
+                className="p-2 border border-slate-200 rounded w-full"
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full mb-2 bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center"
+            >
+              next
+            </button>
+            {errorMessage && <ErrorMessage message={errorMessage} />}
+          </div>
       </form>}
       {confirmationResult && step === 'CODE' && (
         <form onSubmit={validateCode}>
+          <div className='flex flex-col items-center justify-center'>
           <input
             type="text"
             name="code"
             placeholder="Verification code"
             value={code}
             onChange={e => setCode(e.target.value)}
+              className="p-2 border border-slate-200 rounded w-60 mb-4"
           />
-          <button onClick={handleBack}>back</button>
-          <button type="submit">verify</button>
-          {errorMessage && <h1>{errorMessage}</h1>}
+            <button
+              type="submit"
+              className="w-60 mb-2 bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center"
+            >
+              verify
+            </button>
+            <button
+              onClick={handleBack}
+              className="w-60 bg-slate-200 hover:bg-slate-400 text-zinc-900 font-bold py-2 px-4 rounded inline-flex items-center mb-2 text-center justify-center"
+            >
+              back
+            </button>
+            {errorMessage && <ErrorMessage message={errorMessage} />}
+          </div>
         </form>
       )}
     </div>

@@ -1,8 +1,9 @@
 import { createChallenge, createParticipant, fetchUser } from '@/api';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
-import { auth } from '@/firebase';
+import { auth, getAnalyticsSafely } from '@/firebase';
 import { dateToTimestamp, stringToTimestamp, timestampToDate } from '@/util';
+import { logEvent } from 'firebase/analytics';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
@@ -14,7 +15,9 @@ export default function NewChallengeForm() {
   const {
     data: user,
     isLoading: isLoadingUser,
-  } = useQuery('me', () => fetchUser(auth.currentUser!.uid));
+  } = useQuery('me', () => fetchUser(auth.currentUser!.uid), {
+    enabled: !!auth.currentUser,
+  });
 
   const {
     mutate: _createChallenge,
@@ -26,6 +29,7 @@ export default function NewChallengeForm() {
         daysCompleted: [],
         name: user!.name,
         userId: auth.currentUser!.uid,
+        profilePhotoUrl: user!.profilePhotoUrl,
       });
 
       router.push({
@@ -41,7 +45,7 @@ export default function NewChallengeForm() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const [challengeName, setChallengeName] = useState('');
-  const [dayCount, setDayCount] = useState(3);
+  const [dayCount, setDayCount] = useState(30);
   // const [startDate, setStartDate] = useState('');
 
   useEffect(() => {
@@ -57,7 +61,7 @@ export default function NewChallengeForm() {
         setLoading(false);
       }
     });
-    return unsubscribe();
+    return unsubscribe;
   }, [router]);
 
   async function onSubmitChallengeForm(e: React.FormEvent<HTMLFormElement>) {
@@ -90,37 +94,54 @@ export default function NewChallengeForm() {
     return <Loading />;
   }
 
+  if (auth.currentUser && !user) {
+    router.push({
+      pathname: '/signup/username',
+      query: {
+        next: '/new',
+      }
+    });
+    return <Loading />;
+  }
+
+  const analytics = getAnalyticsSafely();
+  if (analytics) {
+    logEvent(analytics!, 'page_view', {
+      page_title: 'create challenge',
+      page_path: '/new',
+    });
+  }
+
   return (
     <div>
       <LogoutButton />
       <form
-        className="flex flex-col"
+        className="flex flex-col items-center justify-center"
         onSubmit={onSubmitChallengeForm}
       >
+        <h1 className="text-2xl font-semibold mb-4">{user!.name}, it starts today!</h1>
+        <h1 className="text-lg font-bold mb-2">challenge name</h1>
         <input
           type="text"
-          placeholder="Challenge name"
+          placeholder={`${user!.name}'s fitness challenge`}
           value={challengeName}
           onChange={(e) => setChallengeName(e.target.value)}
+          className="mb-4 w-48 text-center p-2 border border-slate-200 rounded"
         />
+        <h1 className="text-lg font-bold mb-2">{dayCount} day challenge</h1>
         <input
-          type="number"
+          type="range"
           placeholder="dayCount"
           value={dayCount}
           min={3}
+          max={365}
           onChange={(e) => setDayCount(parseInt(e.target.value))}
+          className="text-center mb-8 w-72"
         />
-        {/* <input
-          type="date"
-          placeholder="startDate"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        /> */}
         <button
           type="submit"
-        >
-          Create
-        </button>
+          className="bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center w-48"
+        >begin</button>
         {errorMessage && <h1>{errorMessage}</h1>}
       </form>
     </div>

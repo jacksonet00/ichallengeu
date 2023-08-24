@@ -5,6 +5,7 @@ import LeaderboardEntry from '@/components/LeaderboardEntry';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
 import PhoneInviteForm from '@/components/PhoneInviteForm';
+import ShareSheet from '@/components/ShareSheet';
 import TrophyCase from '@/components/TrophyCase';
 import { auth, getAnalyticsSafely } from '@/firebase';
 import { logEvent } from 'firebase/analytics';
@@ -54,8 +55,6 @@ export default function Leaderboard() {
     },
   })
 
-  const analytics = getAnalyticsSafely();
-
   async function toggleCompletion() {
     setLoading(true);
     if (participant!.daysCompleted.includes(challenge!.currentDay() - 1)) {
@@ -78,15 +77,7 @@ export default function Leaderboard() {
     }
   }
 
-  async function copyInviteLink(e: React.MouseEvent<HTMLButtonElement>) {
-    const inviteId = await createInvite({
-      challengeId: challenge!.id,
-      senderId: auth.currentUser!.uid,
-      senderName: auth.currentUser!.displayName!,
-    });
 
-    navigator.clipboard.writeText(`${window.location.origin}/join?inviteId=${inviteId}`);
-  }
 
   if (!participant && !isLoadingParticipant) {
     refetchParticipant();
@@ -96,6 +87,7 @@ export default function Leaderboard() {
     return <Loading />;
   }
 
+  const analytics = getAnalyticsSafely();
   if (analytics) {
     logEvent(analytics, 'page_view', {
       page_title: `${challenge!.name} leaderboard`,
@@ -106,17 +98,11 @@ export default function Leaderboard() {
   return (
     <div className="flex items-center justify-center flex-col">
       <LogoutButton />
-      {challenge!.ownerId === auth.currentUser!.uid && <button onClick={copyInviteLink}>Copy Invite Link</button>}
-      {challenge!.ownerId === auth.currentUser!.uid && <PhoneInviteForm
-        challengeId={challenge!.id}
-        senderName={auth.currentUser!.displayName!}
-      />}
-      {challenge!.users.includes(auth.currentUser!.uid) && <CompletionToggle
-        completed={participant!.daysCompleted.includes(challenge!.currentDay() - 1)}
-        onToggle={toggleCompletion}
-      />}
-      <h1 className="font-bold mb-8">{challenge!.name}: Day #{challenge!.currentDay()}{`${challenge!.isCompleted() ? ' ✅' : ''}`}</h1>
-      <div className="w-80 flex flex-col justify-start items-center mb-10">
+      <h1 className="font-bold mb-8">{challenge!.name}: Day #{`${challenge!.currentDay()} of ${challenge!.dayCount}`}{`${challenge!.isCompleted() ? ' ✅' : ''}`}</h1>
+      <div className="mb-8">
+        {challenge!.ownerId === auth.currentUser!.uid && <ShareSheet sender={participant} challenge={challenge} />}
+      </div>
+      <div className="w-80 flex flex-col justify-start items-center mb-8">
         {challenge!.isCompleted() ? <TrophyCase winners={leaderboard!.slice(0, 3)} /> : <IconExplainer />}
       </div>
       <div className="w-80 flex flex-col justify-start mb-10">

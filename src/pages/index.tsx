@@ -1,13 +1,13 @@
-import { fetchChallenges, fetchMyChallenges } from '@/api';
+import { fetchMyChallenges } from '@/api';
 import Loading from '@/components/Loading';
 import LogoutButton from '@/components/LogoutButton';
 import { logEvent } from "firebase/analytics";
+import { onAuthStateChanged } from 'firebase/auth';
 import Link from "next/link";
+import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { Challenge } from "../data";
 import { auth, getAnalyticsSafely } from '../firebase';
-import { useEffect } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
 
 function renderChallengeList(challenges: Challenge[]) {
   return challenges.map((challenge) => (
@@ -27,27 +27,36 @@ export default function Home() {
   const { data: challenges, isLoading, refetch } = useQuery('challenges', () => fetchMyChallenges(auth.currentUser?.uid || ''), {
     enabled: !!auth.currentUser,
     initialData: [],
+    onSuccess: () => {
+      setLoading(false);
+    }
   });
+
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         refetch();
       }
+      else {
+        setLoading(false);
+      }
     });
-    return unsubscribe();
+    return unsubscribe;
   }, [refetch]);
+
+  if (isLoading || loading) {
+    return <Loading />;
+  }
 
   const analytics = getAnalyticsSafely();
   if (analytics) {
     logEvent(analytics, 'page_view', {
       page_title: 'home',
       page_path: '/',
+      is_auth: !!auth.currentUser,
     });
-  }
-
-  if (isLoading) {
-    return <Loading />;
   }
 
   return (

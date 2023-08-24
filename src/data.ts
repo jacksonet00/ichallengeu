@@ -11,7 +11,7 @@ declare global {
 export interface ICUserDocument {
   name: string;
   phone: string;
-  profilePhotoUrl: string | null;
+  profilePhotoUrl: string;
   challenges: string[];
 }
 
@@ -19,7 +19,7 @@ export class ICUser {
   id: string;
   name: string;
   phone: string;
-  profilePhotoUrl: string | null;
+  profilePhotoUrl: string;
   challenges: string[];
 
   constructor(doc: DocumentSnapshot<DocumentData>) {
@@ -105,6 +105,7 @@ export interface ParticipantDocument {
   userId: string;
   challengeId: string;
   daysCompleted: number[];
+  profilePhotoUrl: string;
 }
 
 export class Participant {
@@ -113,15 +114,17 @@ export class Participant {
   userId: string;
   challengeId: string;
   daysCompleted: number[];
+  profilePhotoUrl: string;
 
   constructor(doc: DocumentSnapshot<DocumentData>) {
-    const { name, userId, challengeId, daysCompleted } = doc.data()! as ParticipantDocument;
+    const { name, userId, challengeId, daysCompleted, profilePhotoUrl } = doc.data()! as ParticipantDocument;
 
     this.id = doc.id;
     this.name = name;
     this.userId = userId;
     this.challengeId = challengeId;
     this.daysCompleted = daysCompleted;
+    this.profilePhotoUrl = profilePhotoUrl;
   }
 };
 

@@ -1,11 +1,14 @@
 import { DocumentReference, addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
 import { Challenge, ChallengeDocument, ICUser, Invite, LeaderboardData, Participant, ParticipantDocument } from './data';
-import { auth, db } from './firebase';
+import { auth, db, storage } from './firebase';
 import { genKey } from './util';
 import { updateProfile } from 'firebase/auth';
+import { uploadBytes, ref, getDownloadURL } from 'firebase/storage';
 
+// AllExcept<MyType, 'id' | 'name'>
+// => means that all properties are required except id and name
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
-type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+type AllExcept<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export async function fetchUser(uid: string): Promise<ICUser | null> {
   const snapshot = await getDoc(doc(db, 'users', uid));
@@ -20,21 +23,46 @@ export interface ICUserMutationQuery {
   user: Partial<ICUser>;
 }
 
-/** Merges provided fields with existing fields. */
+/** Merges provided fields with existing fields.
+ *  Name and profile photo updates are persisted to auth.currentUser and
+ *  will persist across all participants records with this uid.
+ */
 export async function updateUser({ uid, user }: ICUserMutationQuery): Promise<void> {
   if (user.name && auth.currentUser!.displayName !== user.name) {
     await updateProfile(auth.currentUser!, {
       displayName: user.name,
     });
+
+    const snapshot = await getDocs(query(collection(db, 'participants'), where('userId', '==', uid)));
+    if (!snapshot.empty) {
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(doc => {
+        batch.set(doc.ref, {
+          name: user.name,
+        }, { merge: true });
+      });
+      await batch.commit();
+    }
   }
 
   if (user.profilePhotoUrl && auth.currentUser!.photoURL !== user.profilePhotoUrl) {
     await updateProfile(auth.currentUser!, {
       photoURL: user.profilePhotoUrl,
     });
+
+    const snapshot = await getDocs(query(collection(db, 'participants'), where('userId', '==', uid)));
+    if (!snapshot.empty) {
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(doc => {
+        batch.set(doc.ref, {
+          profilePhotoUrl: user.profilePhotoUrl,
+        }, { merge: true });
+      });
+      await batch.commit();
+    }
   }
 
-  setDoc(doc(db, 'users', uid), user, { merge: true });
+  await setDoc(doc(db, 'users', uid), user, { merge: true });
 }
 
 export async function fetchChallenge(challengeId: string): Promise<Challenge | null> {
@@ -151,7 +179,7 @@ export async function fetchInvite(inviteId: string): Promise<Invite | null> {
   return new Invite(snapshot);
 }
 
-export async function createInvite(invite: PartialBy<Invite, 'id' | 'expires' | 'expiresAt'>): Promise<string> {
+export async function createInvite(invite: AllExcept<Invite, 'id' | 'expires' | 'expiresAt'>): Promise<string> {
   const ref = await addDoc(collection(db, 'invites'), invite);
   return ref.id;
 }
@@ -168,9 +196,14 @@ export async function fetchLeaderboardData(challengeId: string): Promise<Leaderb
 }
 
 export async function sendText(to: string, body: string): Promise<DocumentReference> {
-  // log this in a database so you cannot send more than 3 texts per day
+  // TODO: log this in a database so you cannot send more than 3 texts per day
   return addDoc(collection(db, 'messages'), {
     to,
     body,
   });
+}
+
+export async function uploadFile(file: File, filename: string): Promise<string> {
+  const snapshot = await uploadBytes(ref(storage, filename), file);
+  return getDownloadURL(snapshot.ref);
 }

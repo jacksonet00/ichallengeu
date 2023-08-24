@@ -86,7 +86,7 @@ export default function Join() {
     });
   }
 
-  if (isLoadingInvite || isLoadingChallenge || isLoadingUser || isJoiningChallenge) {
+  if (isLoadingInvite || !invite || isLoadingChallenge || isLoadingUser || isJoiningChallenge) {
     return <Loading status={status} />;
   }
 

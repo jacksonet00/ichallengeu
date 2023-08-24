@@ -59,12 +59,12 @@ export default function ProfileSmall({
 
     return (
         <div className="bg-sky-50 rounded-md flex flex-row justify-start items-center p-2">
-            {/* <picture>
-                <source srcSet={record.user.profile_photo ? record.user.profile_photo! : ""} type="image/webp" />
-                <img className="rounded-full h-12 w-12 mr-4" src={record.user.profile_photo ? record.user.profile_photo! : ""} alt={`profile photo for ${record.user.name}`} />
-            </picture> */}
             <div className="flex flex-col w-80">
-                <div className="flex flex-row">
+                <div className="flex flex-row items-center justify-center">
+                    <picture className="mr-2">
+                        <source srcSet={participant.profilePhotoUrl} type="image/webp" />
+                        <img className="rounded-full h-8 w-8" src={participant.profilePhotoUrl} alt={`profile photo for ${participant.name}`} />
+                    </picture>
                     <div className="flex flex-col">
                         <div className="flex flex-row">
                             <h1 className="font-bold mr-2">{participant.name}</h1>
