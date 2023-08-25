@@ -93,10 +93,15 @@ export class Challenge {
   }
 
   currentDay() {
-    if (daysBetween(this.startDate) > this.dayCount) {
+    const _daysBetween = daysBetween(this.startDate);
+
+    if (_daysBetween >= this.dayCount) {
       return this.dayCount;
     }
-    return daysBetween(this.startDate);
+    if (_daysBetween >= 1) {
+      return _daysBetween + 1;
+    }
+    return new Date() > this.startDate ? 1 : 0;
   }
 };
 

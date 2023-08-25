@@ -61,6 +61,13 @@ export default function Login() {
 
     const { phone, error } = formatPhone(rawPhoneString);
     if (error) {
+      const analytics = getAnalyticsSafely();
+      if (analytics) {
+        logEvent(analytics, 'exception', {
+          description: "invlaid phone number",
+          fatal: false,
+        });
+      }
       setErrorMessage(error.message);
       setLoading(false);
       return;
@@ -78,12 +85,24 @@ export default function Login() {
       const _confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
       setConfirmationResult(_confirmationResult);
 
+      if (analytics) {
+        logEvent(analytics, 'add_phone_number', {
+          phone_number: formattedPhone,
+        });
+      }
+
       setStep('CODE');
       setErrorMessage(null);
       setLoading(false);
     }
     catch (e) {
-      console.error(e);
+      const analytics = getAnalyticsSafely();
+      if (analytics) {
+        logEvent(analytics, 'exception', {
+          description: "invalid phone number",
+          fatal: false,
+        });
+      }
       setErrorMessage('Invalid phone number.');
       setLoading(false);
       return;
@@ -95,6 +114,13 @@ export default function Login() {
     setLoading(true);
 
     if (!code.match(/^[0-9]{6}$/)) {
+      const analytics = getAnalyticsSafely();
+      if (analytics) {
+        logEvent(analytics, 'exception', {
+          description: "invalide phone verification code",
+          fatal: false,
+        });
+      }
       setErrorMessage("Invalid code.");
       setLoading(false);
       return;
@@ -112,6 +138,14 @@ export default function Login() {
       const user = await fetchUser(userCredential.user.uid);
 
       if (!user) {
+        const analytics = getAnalyticsSafely();
+        if (analytics) {
+          logEvent(analytics, 'login', {
+            method: 'phone',
+            new_user: true,
+          });
+        }
+
         router.push({
           pathname: '/signup/username',
           query: {
@@ -122,6 +156,13 @@ export default function Login() {
       }
     }
     catch (e) {
+      const analytics = getAnalyticsSafely();
+      if (analytics) {
+        logEvent(analytics, 'exception', {
+          description: "incorrect phone verification code",
+          fatal: false,
+        });
+      }
       setErrorMessage('Incorrect code!');
       setLoading(false);
       return;
@@ -131,6 +172,7 @@ export default function Login() {
     if (analytics) {
       logEvent(analytics, 'login', {
         method: 'phone',
+        new_user: false,
       });
     }
 
@@ -163,7 +205,9 @@ export default function Login() {
       {step === 'PHONE' &&
         <form
           onSubmit={validatePhone}
+          className="flex flex-col items-center justify-center"
         >
+          {router.query.next && <h1 className="mb-4 text-lg font-semibold">login to continue</h1>}
           <div className='flex flex-col justify-center items-center'>
             <div className='flex flex-row justify-center items-center mb-4'>
               <select

@@ -1,10 +1,9 @@
-import { createInvite, fetchChallenge, fetchLeaderboardData, fetchParticipant, updateParticipant } from '@/api';
-import CompletionToggle from '@/components/CompletionToggle';
-import IconExplainer from '@/components/IconExplainer';
+import { fetchChallenge, fetchLeaderboardData, fetchParticipant, updateParticipant } from '@/api';
+import CompletionTracker from '@/components/CompletionTracker';
+import IconDescription from '@/components/IconDescription';
 import LeaderboardEntry from '@/components/LeaderboardEntry';
 import Loading from '@/components/Loading';
-import LogoutButton from '@/components/LogoutButton';
-import PhoneInviteForm from '@/components/PhoneInviteForm';
+import HeaderProfile from '@/components/HeaderProfile';
 import ShareSheet from '@/components/ShareSheet';
 import TrophyCase from '@/components/TrophyCase';
 import { auth, getAnalyticsSafely } from '@/firebase';
@@ -32,10 +31,16 @@ export default function Leaderboard() {
     refetch: refetchParticipant,
   } = useQuery(['participants', challengeId], () => fetchParticipant(challengeId, auth.currentUser?.uid || ''), {
     enabled: !!challengeId && !!auth.currentUser,
-    onSuccess: () => {
+    onSuccess: (participant) => {
+      if (!participant) {
+        router.push({
+          pathname: '/',
+        });
+      }
+
       queryClient.invalidateQueries(['leaderboard', challengeId]);
       setLoading(false);
-    }
+    },
   });
 
   const {
@@ -77,8 +82,6 @@ export default function Leaderboard() {
     }
   }
 
-
-
   if (!participant && !isLoadingParticipant) {
     refetchParticipant();
   }
@@ -91,19 +94,30 @@ export default function Leaderboard() {
   if (analytics) {
     logEvent(analytics, 'page_view', {
       page_title: `${challenge!.name} leaderboard`,
-      page_path: `/leaderboard/${challenge!.id}`
+      page_path: `/leaderboard/${challenge!.id}`,
+      is_completed: challenge!.isCompleted(),
+      challenge_day: challenge!.currentDay(),
     });
   }
 
   return (
     <div className="flex items-center justify-center flex-col">
-      <LogoutButton />
+      <HeaderProfile />
       <h1 className="font-bold mb-8">{challenge!.name}: Day #{`${challenge!.currentDay()} of ${challenge!.dayCount}`}{`${challenge!.isCompleted() ? ' ✅' : ''}`}</h1>
-      <div className="mb-8">
-        {challenge!.ownerId === auth.currentUser!.uid && <ShareSheet sender={participant} challenge={challenge} />}
+      <div className='mb-8'>
+        {challenge!.users.includes(auth.currentUser!.uid) && (
+          <CompletionTracker
+            completed={participant.daysCompleted.includes(challenge!.currentDay() - 1)}
+            toggleCompletion={toggleCompletion}
+            challenge={challenge}
+          />
+        )}
       </div>
+      {challenge!.ownerId === auth.currentUser!.uid && <div className="mb-8">
+        <ShareSheet sender={participant} challenge={challenge} />
+      </div>}
       <div className="w-80 flex flex-col justify-start items-center mb-8">
-        {challenge!.isCompleted() ? <TrophyCase winners={leaderboard!.slice(0, 3)} /> : <IconExplainer />}
+        {challenge!.isCompleted() ? <TrophyCase winners={leaderboard!.slice(0, 3)} /> : <IconDescription />}
       </div>
       <div className="w-80 flex flex-col justify-start mb-10">
         {leaderboard.map((leaderboardData, index) => (

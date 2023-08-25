@@ -17,6 +17,11 @@ export default function ProfilePhoto() {
   const [loading, setLoading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState('');
 
+  // bug...
+  // http://localhost:3000/signup/profile-photo?next=%2Fjoin%3FinviteId%3D1jr5m5RwUlcTN9EihWDY
+  // goes to =>
+  // http://localhost:3000/join%3FinviteId=1jr5m5RwUlcTN9EihWDY
+
   const { mutate: _updateUser } = useMutation({
     mutationFn: updateUser,
     onSuccess: () => {
@@ -81,6 +86,11 @@ export default function ProfilePhoto() {
         profilePhotoUrl: photoUrl,
       }
     });
+
+    const analytics = getAnalyticsSafely();
+    if (analytics) {
+      logEvent(analytics!, 'upload_photo');
+    }
   }
 
   if (loading || !auth.currentUser) {

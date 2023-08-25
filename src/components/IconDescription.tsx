@@ -1,12 +1,12 @@
-interface IconExplainerRowProps {
+interface IconDescriptionRowProps {
     icon: string;
     description: string;
 }
 
-function IconExplainerRow({
+function IconDescriptionRow({
     icon,
     description,
-}: IconExplainerRowProps) {
+}: IconDescriptionRowProps) {
     return (
         <div className="flex flex-row w-52 items-center">
             <div className="bg-sky-200 w-7 h-7 rounded-sm flex items-center justify-center mr-2">
@@ -17,17 +17,17 @@ function IconExplainerRow({
     );
 }
 
-interface IconExplainerProps {
+interface IconDescriptionProps {
 
 }
 
-export default function IconExplainer({ }: IconExplainerProps) {
+export default function IconDescription({ }: IconDescriptionProps) {
     return (
         <div className="bg-sky-50 w-60 h-40 rounded-md flex flex-col items-center pt-2 pb-2 justify-evenly">
-            <IconExplainerRow icon="🔥" description="Your streak!" />
-            <IconExplainerRow icon="🏆" description="You're on your best streak!" />
-            <IconExplainerRow icon="🏅" description="Your all time best streak." />
-            <IconExplainerRow icon="✅" description="Your total completions." />
+            <IconDescriptionRow icon="🔥" description="Your streak!" />
+            <IconDescriptionRow icon="🏆" description="You're on your best streak!" />
+            <IconDescriptionRow icon="🏅" description="Your all time best streak." />
+            <IconDescriptionRow icon="✅" description="Your total completions." />
         </div>
     );
 }

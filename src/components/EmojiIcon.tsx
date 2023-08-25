@@ -1,9 +1,9 @@
-export type IconProps = {
+export type EmojiIconProps = {
     emoji: string;
     value: number;
 };
 
-export default function Icon({ emoji, value }: IconProps) {
+export default function EmojiIcon({ emoji, value }: EmojiIconProps) {
     return (
         <div className="cursor-default">
             <div className="bg-cyan-50 h-12 w-12 rounded-md flex flex-col items-center justify-center p-4">

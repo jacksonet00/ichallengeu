@@ -1,6 +1,8 @@
 import { fetchChallenge, fetchInvite, fetchUser, joinChallenge } from '@/api';
 import Loading from '@/components/Loading';
-import { auth } from '@/firebase';
+import HeaderProfile from '@/components/HeaderProfile';
+import { auth, getAnalyticsSafely } from '@/firebase';
+import { logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
@@ -42,9 +44,8 @@ export default function Join() {
 
     setStatus('Searching...');
 
-    // User is not authenticated
-    if (!auth.currentUser) { // todo: show some message letting the user know to sign up for an account before they join
-      router.push({          // or maybe do this redirect after they choose join
+    if (!auth.currentUser) {
+      router.push({
         pathname: '/login',
         query: {
           next: `/join?inviteId=${invite.id}`,
@@ -77,6 +78,14 @@ export default function Join() {
 
     joinChallenge(challenge!, user!).then(() => {
       setStatus('Joined!');
+      const analytics = getAnalyticsSafely();
+      if (analytics) {
+        logEvent(analytics, 'join_challenge', {
+          challenge_id: challenge!.id,
+          sender_id: invite!.senderId,
+          joiner_id: auth.currentUser!.uid,
+        });
+      }
       router.push({
         pathname: '/leaderboard',
         query: {
@@ -86,15 +95,31 @@ export default function Join() {
     });
   }
 
-  if (isLoadingInvite || !invite || isLoadingChallenge || isLoadingUser || isJoiningChallenge) {
+  if (!auth.currentUser || isLoadingInvite || !invite || isLoadingChallenge || isLoadingUser || isJoiningChallenge) {
     return <Loading status={status} />;
+  }
+
+  const analytics = getAnalyticsSafely();
+  if (analytics) {
+    logEvent(analytics, 'page_view', {
+      page_title: 'challenge invite',
+      page_path: '/join',
+      challenge_id: challenge!.id,
+      sender_id: invite!.senderId,
+      joiner_id: auth.currentUser!.uid,
+    });
   }
 
   return (
     <div className='flex flex-col items-center'>
-      <h1>{invite!.senderName} has invited you to join {challenge!.name}!</h1>
-      <h1>Would you like to accept?</h1>
-      <button onClick={handleJoinChallenge}>Join</button>
+      <HeaderProfile />
+      <h1 className="font-bold text-xl mb-2">{invite!.senderName} invited you to join</h1>
+      <h1 className="font-bold text-xl mb-12">{challenge!.name}!</h1>
+      <h1 className="font-semibold text-lg mb-4">accept the challenge?</h1>
+      <button
+        onClick={handleJoinChallenge}
+        className="bg-sky-100 hover:bg-sky-200 px-3 py-2 rounded-md w-48 font-bold text-md"
+      >{"i'm in"}</button>
     </div>
   );
 }

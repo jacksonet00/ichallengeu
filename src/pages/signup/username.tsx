@@ -58,8 +58,16 @@ export default function Username() {
 
   function onSubmitUsername(e: React.FormEvent<HTMLFormElement>): void {
     e.preventDefault();
+    setLoading(true);
 
     if (!username.match(/^[a-zA-Z][a-zA-Z0-9_.]{2,19}$/)) {
+      const analytics = getAnalyticsSafely();
+      if (analytics) {
+        logEvent(analytics!, 'exception', {
+          description: 'invalid username',
+          fatal: false,
+        });
+      }
       setErrorMessage('Invalid username.');
       setLoading(false);
       return;
@@ -86,6 +94,10 @@ export default function Username() {
         challenges: [],
       }
     });
+    const analytics = getAnalyticsSafely();
+    if (analytics) {
+      logEvent(analytics!, 'add_username');
+    }
   }
 
   if (loading) {

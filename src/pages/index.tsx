@@ -1,6 +1,6 @@
 import { fetchMyChallenges } from '@/api';
 import Loading from '@/components/Loading';
-import LogoutButton from '@/components/LogoutButton';
+import HeaderProfile from '@/components/HeaderProfile';
 import { logEvent } from "firebase/analytics";
 import { onAuthStateChanged } from 'firebase/auth';
 import Link from "next/link";
@@ -61,7 +61,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center justify-start">
-      <LogoutButton />
+      <HeaderProfile />
       <div
         className="bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center mb-8"
       >

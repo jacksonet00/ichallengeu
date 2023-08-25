@@ -17,11 +17,18 @@ Create custom leaderboards to compete with friends!
 - implement default profile photos (done)
 - add profile photos to leaderboard ui (done)
 - add edit banner to profile photo component (done)
-- clean up share sheet for leaderboard
-- bulletproof mark completed
-- add analytics to each page
-- write unit tests for core functionality
-  - build graph
+- clean up share sheet for leaderboard (done)
+- bulletproof mark completed (done)
+- add analytics to each page (done)
+- style join page (done)
+  - MAJOR BUG: profile-photo upload page doesn't parse next url correctly ()
+    - best fix is probably to get a bit more precise about how i'm passing around these variables
+- write unit tests for core functionality (pretty much done)
+  - build graph (minimally tested)
+  - get current day (kinda works...)
+  - get is completed (done)
+
+  ONLY 1 BUG BLOCKING!!!
 - deploy on vercel
 
 ## stretch todos
@@ -32,6 +39,8 @@ Create custom leaderboards to compete with friends!
 - sorting challenges on homepage
 - ranking public challenges on homepage
 - build landing page to describe functionality if you aren't logged in
+- dark mode
+- add join records in the database
 
 ## 1,000+ users todos
 - premium plan

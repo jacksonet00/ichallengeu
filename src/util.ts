@@ -8,7 +8,7 @@ export function genKey() {
 // date functions
 
 export function daysBetween(date: Date) {
-  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+  return Math.floor((Date.now() - date.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export function stringToTimestamp(date: string | null): Timestamp | null {

@@ -1,6 +1,6 @@
 import { createChallenge, createParticipant, fetchUser } from '@/api';
 import Loading from '@/components/Loading';
-import LogoutButton from '@/components/LogoutButton';
+import HeaderProfile from '@/components/HeaderProfile';
 import { auth, getAnalyticsSafely } from '@/firebase';
 import { dateToTimestamp, stringToTimestamp, timestampToDate } from '@/util';
 import { logEvent } from 'firebase/analytics';
@@ -29,8 +29,17 @@ export default function NewChallengeForm() {
         daysCompleted: [],
         name: user!.name,
         userId: auth.currentUser!.uid,
-        profilePhotoUrl: user!.profilePhotoUrl,
+        profilePhotoUrl: auth.currentUser!.photoURL!,
       });
+
+      const analytics = getAnalyticsSafely();
+      if (analytics) {
+        logEvent(analytics!, 'create_challenge', {
+          page_title: 'create challenge',
+          page_path: '/new',
+          challenge_id: challengeId,
+        });
+      }
 
       router.push({
         pathname: '/leaderboard',
@@ -114,7 +123,7 @@ export default function NewChallengeForm() {
 
   return (
     <div>
-      <LogoutButton />
+      <HeaderProfile />
       <form
         className="flex flex-col items-center justify-center"
         onSubmit={onSubmitChallengeForm}

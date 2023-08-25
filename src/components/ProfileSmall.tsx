@@ -31,6 +31,11 @@ export default function ProfileSmall({
             logEvent(analytics, 'select_content', {
                 content_type: 'graph',
                 item_id: participant.id,
+                participant_name: participant.name,
+                challenge_id: participant.challengeId,
+                challenge_name: leaderboardData.challenge.name,
+                challenge_day: leaderboardData.challenge.currentDay(),
+                is_completed: leaderboardData.challenge.isCompleted(),
             });
         }
 
@@ -62,8 +67,15 @@ export default function ProfileSmall({
             <div className="flex flex-col w-80">
                 <div className="flex flex-row items-center justify-center">
                     <picture className="mr-2">
-                        <source srcSet={participant.profilePhotoUrl} type="image/webp" />
-                        <img className="rounded-full h-8 w-8" src={participant.profilePhotoUrl} alt={`profile photo for ${participant.name}`} />
+                        <source
+                            srcSet={participant.profilePhotoUrl}
+                            type="image/webp"
+                        />
+                        <img
+                            className="rounded-full h-8 w-8"
+                            src={participant.profilePhotoUrl}
+                            alt={`profile photo for ${participant.name}`}
+                        />
                     </picture>
                     <div className="flex flex-col">
                         <div className="flex flex-row">
@@ -77,7 +89,12 @@ export default function ProfileSmall({
                         </div>
                     </div>
                     <button className="ml-auto mr-2" onClick={toggleGraph}>
-                        <Image src={`/chevron-${isShowingGraph ? 'down' : 'left'}.svg`} width={20} height={20} alt={`${isShowingGraph ? 'down' : 'left'} arrow`} />
+                        <Image
+                            src={`/chevron-${isShowingGraph ? 'down' : 'left'}.svg`}
+                            width={20}
+                            height={20}
+                            alt={`${isShowingGraph ? 'down' : 'left'} arrow`}
+                        />
                     </button>
                 </div>
                 {isShowingGraph && (

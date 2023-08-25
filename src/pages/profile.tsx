@@ -1,8 +1,9 @@
 import { fetchUser, updateUser } from '@/api';
 import ErrorMessage from '@/components/ErrorMessage';
 import PhotoUploader from '@/components/PhotoUploader';
-import { auth } from '@/firebase';
+import { auth, getAnalyticsSafely } from '@/firebase';
 import { genKey } from '@/util';
+import { logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
@@ -49,6 +50,13 @@ export default function Profile() {
         profilePhotoUrl,
       },
     });
+
+    const analytics = getAnalyticsSafely();
+    if (analytics) {
+      logEvent(analytics!, 'update_user', {
+        property_updated: 'profile_photo',
+      });
+    }
   }
 
   async function handleUpdateUsername(e: React.FormEvent<HTMLFormElement>) {
@@ -67,9 +75,26 @@ export default function Profile() {
         name: updatedUsername,
       },
     });
+
+    const analytics = getAnalyticsSafely();
+    if (analytics) {
+      logEvent(analytics!, 'update_user', {
+        property_updated: 'name',
+      });
+    }
   }
 
   if (!auth.currentUser) return <></>;
+
+  const analytics = getAnalyticsSafely();
+  if (analytics) {
+    logEvent(analytics!, 'page_view', {
+      page_title: 'profile',
+      page_path: '/profile',
+      user_id: auth.currentUser.uid,
+      user_name: auth.currentUser.displayName,
+    });
+  }
 
   return (
     <div className="flex flex-col items-center justify-center">
