@@ -79,12 +79,7 @@ export default function Login() {
 
     try {
       await window.recaptchaVerifier.verify();
-    }
-    catch (e) {
-      console.error(e);
-    }
 
-    try {
       const _confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, window.recaptchaVerifier);
       setConfirmationResult(_confirmationResult);
 
