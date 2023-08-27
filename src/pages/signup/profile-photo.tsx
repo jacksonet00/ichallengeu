@@ -17,13 +17,6 @@ export default function ProfilePhoto() {
   const [loading, setLoading] = useState(false);
   const [photoUrl, setPhotoUrl] = useState('');
 
-  // bug...
-  // http://localhost:3000/signup/profile-photo?next=%2Fjoin%3FinviteId%3D1jr5m5RwUlcTN9EihWDY
-  // goes to =>
-  // http://localhost:3000/join%3FinviteId=1jr5m5RwUlcTN9EihWDY
-  // now it goes to http://localhost:3000/signup/%2Fnew
-  // wtffff
-
   const { mutate: _updateUser } = useMutation({
     mutationFn: updateUser,
     onSuccess: async () => {

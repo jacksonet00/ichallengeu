@@ -1,5 +1,5 @@
 import { LeaderboardData } from "../data";
-import ProfileSmall from "./ProfileSmall";
+import LeaderboardProfile from "./LeaderboardProfile";
 import ProgressBars from "./ProgressBars";
 
 type LeaderboardEntryProps = {
@@ -12,7 +12,7 @@ export default function LeaderboardEntry({ leaderboardData, crown }: Leaderboard
         <div className="pb-4 flex flex-col w-80 mb-4">
             <div>
                 <div className="mb-2">
-                    <ProfileSmall
+                    <LeaderboardProfile
                         leaderboardData={leaderboardData}
                         crown={crown}
                     />

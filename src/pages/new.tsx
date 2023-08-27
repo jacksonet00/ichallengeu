@@ -1,14 +1,14 @@
 import { createChallenge, createParticipant, fetchUser } from '@/api';
-import Loading from '@/components/Loading';
 import HeaderProfile from '@/components/HeaderProfile';
+import Loading from '@/components/Loading';
 import { auth, getAnalyticsSafely } from '@/firebase';
-import { dateToTimestamp, stringToTimestamp, timestampToDate } from '@/util';
+import { push } from '@/routing';
+import { dateToTimestamp } from '@/util';
 import { logEvent } from 'firebase/analytics';
 import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
-import { push } from '@/routing';
 
 export default function NewChallengeForm() {
   const router = useRouter();
@@ -33,11 +33,10 @@ export default function NewChallengeForm() {
         profilePhotoUrl: auth.currentUser!.photoURL!,
       });
 
-      // i feel like i shouldn't have to do this... but
-      // await updateProfile(auth.currentUser!, {
-      //   displayName: user!.name,
-      //   photoURL: user!.profilePhotoUrl,
-      // });
+      await updateProfile(auth.currentUser!, {
+        displayName: user!.name,
+        photoURL: user!.profilePhotoUrl,
+      });
 
       const analytics = getAnalyticsSafely();
       if (analytics) {

@@ -8,15 +8,15 @@ import { DEFAULT_PROFILE_PHOTO_URL } from '@/constants';
 import { useQuery } from 'react-query';
 import { fetchUser } from '@/api';
 
-export type ProfileProps = {
+export type LeaderboardProfileProps = {
     leaderboardData: LeaderboardData;
     crown: boolean;
 };
 
-export default function ProfileSmall({
+export default function LeaderboardProfile({
     leaderboardData,
     crown,
-}: ProfileProps) {
+}: LeaderboardProfileProps) {
     const [isShowingGraph, setIsShowingGraph] = useState(false);
 
     const {

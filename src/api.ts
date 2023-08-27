@@ -5,9 +5,13 @@ import { genKey } from './util';
 import { updateProfile } from 'firebase/auth';
 import { uploadBytes, ref, getDownloadURL } from 'firebase/storage';
 
-// AllExcept<MyType, 'id' | 'name'>
-// => means that all properties are required except id and name
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+/** Reuires all properties except the ones specified.
+ *  @example
+ *  type MyType = { id: string, name: string, age: number };
+ * 
+ *  const myTypeWithoutId: AllExcept<MyType, 'id'> = { name: 'John', age: 30 };
+ */
 type AllExcept<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 
 export async function fetchUser(uid: string): Promise<ICUser | null> {
@@ -24,21 +28,38 @@ export interface ICUserMutationQuery {
 }
 
 /** Merges provided fields with existing fields.
+ * 
  *  Name and profile photo updates are persisted to auth.currentUser and
  *  will persist across all participants records with this uid.
  */
 export async function updateUser({ uid, user }: ICUserMutationQuery): Promise<void> {
+  const diff: { name?: string, profilePhotoUrl?: string; } = {};
+
   if (user.name) {
+    diff.name = user.name;
     await updateProfile(auth.currentUser!, {
       displayName: user.name,
     });
   }
 
   if (user.profilePhotoUrl) {
+    diff.profilePhotoUrl = user.profilePhotoUrl;
     await updateProfile(auth.currentUser!, {
       photoURL: user.profilePhotoUrl,
     });
   }
+
+  if (diff.name || diff.profilePhotoUrl) {
+    const snapshot = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
+    if (!snapshot.empty) {
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(doc => {
+        batch.set(doc.ref, diff, { merge: true });
+      });
+      batch.commit();
+    }
+  }
+
   await setDoc(doc(db, 'users', uid), user, { merge: true });
 }
 
@@ -124,6 +145,15 @@ export async function fetchParticipant(challengeId: string, userId: string): Pro
   return new Participant(snapshot.docs[0]);
 }
 
+export async function createParticipant(participant: ParticipantDocument): Promise<string> {
+  const user = await fetchUser(participant.userId);
+
+  const ref = await addDoc(collection(db, 'participants'), {
+    ...participant,
+    profilePhotoUrl: user!.profilePhotoUrl,
+  } as ParticipantDocument);
+  return ref.id;
+}
 
 export interface ParticipantMutationQuery {
   userId: string;
@@ -141,16 +171,6 @@ export async function updateParticipant({ userId, challengeId, participant }: Pa
 
   const ref = snapshot.docs[0].ref;
   setDoc(ref, participant, { merge: true });
-}
-
-export async function createParticipant(participant: ParticipantDocument): Promise<string> {
-  const user = await fetchUser(participant.userId);
-
-  const ref = await addDoc(collection(db, 'participants'), {
-    ...participant,
-    profilePhotoUrl: user!.profilePhotoUrl,
-  } as ParticipantDocument);
-  return ref.id;
 }
 
 export async function fetchInvite(inviteId: string): Promise<Invite | null> {

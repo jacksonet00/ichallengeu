@@ -17,11 +17,7 @@ function IconDescriptionRow({
     );
 }
 
-interface IconDescriptionProps {
-
-}
-
-export default function IconDescription({ }: IconDescriptionProps) {
+export default function IconDescription() {
     return (
         <div className="bg-sky-50 w-60 h-40 rounded-md flex flex-col items-center pt-2 pb-2 justify-evenly">
             <IconDescriptionRow icon="🔥" description="Your streak!" />

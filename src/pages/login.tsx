@@ -174,11 +174,6 @@ export default function Login() {
       });
     }
 
-    // this goes to
-    // http://localhost:3000/%2Fjoin?next=&inviteId=undefined
-    // instead of 
-    // http://localhost:3000/join?inviteId={inviteId}
-
     pushNext(router, "/");
   }
 
