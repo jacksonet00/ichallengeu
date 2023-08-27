@@ -1,8 +1,8 @@
 import { fetchUser, updateUser } from '@/api';
 import Loading from '@/components/Loading';
 import PhotoUploader from '@/components/PhotoUploader';
-import { DEFAULT_PROFILE_PHOTO_URL } from '@/constants';
 import { auth, getAnalyticsSafely } from '@/firebase';
+import { push, pushNext } from '@/routing';
 import { genKey } from '@/util';
 import { logEvent } from 'firebase/analytics';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -21,10 +21,12 @@ export default function ProfilePhoto() {
   // http://localhost:3000/signup/profile-photo?next=%2Fjoin%3FinviteId%3D1jr5m5RwUlcTN9EihWDY
   // goes to =>
   // http://localhost:3000/join%3FinviteId=1jr5m5RwUlcTN9EihWDY
+  // now it goes to http://localhost:3000/signup/%2Fnew
+  // wtffff
 
   const { mutate: _updateUser } = useMutation({
     mutationFn: updateUser,
-    onSuccess: () => {
+    onSuccess: async () => {
       queryClient.invalidateQueries('me');
 
       const analytics = getAnalyticsSafely();
@@ -34,9 +36,8 @@ export default function ProfilePhoto() {
         });
       }
 
-      router.push({
-        pathname: (router.query.next as string || '/').replace('%3F', '?'), // a bit of a hack
-      });
+      pushNext(router, '/');
+      return;
     }
   });
 
@@ -44,36 +45,23 @@ export default function ProfilePhoto() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setLoading(true);
-        router.push({
-          pathname: '/login',
-          query: {
-            next: router.query.next || '/',
-          },
-        });
+
+        push(router, '/login');
+        return;
       }
       else {
         const userDoc = await fetchUser(user.uid);
-        if (!userDoc) {
-          router.push({
-            pathname: '/login',
-            query: {
-              next: router.query.next || '/',
-            },
-          });
-        }
-        if (userDoc!.profilePhotoUrl !== DEFAULT_PROFILE_PHOTO_URL) {
-          router.push({
-            pathname: (router.query.next as string || '/').replace('%3F', '?'), // here too...
-          });
-          return;
+        if (!userDoc && !loading) {
+          push(router, "/signup/username");
         }
         setLoading(false);
       }
     });
     return unsubscribe;
-  }, [router]);
+  }, [router, loading]);
 
   async function onSubmitPhoto(e: React.FormEvent<HTMLFormElement>) {
+    setLoading(true);
     e.preventDefault();
 
     if (!photoUrl) {
@@ -86,6 +74,8 @@ export default function ProfilePhoto() {
         profilePhotoUrl: photoUrl,
       }
     });
+
+    setLoading(false);
 
     const analytics = getAnalyticsSafely();
     if (analytics) {

@@ -1,5 +1,6 @@
 import { fetchUser } from '@/api';
 import { auth } from '@/firebase';
+import { push } from '@/routing';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
 
@@ -12,9 +13,7 @@ export default function HeaderProfile() {
   const router = useRouter();
 
   function handleClick() {
-    router.push({
-      pathname: '/profile',
-    });
+    push(router, '/profile');
   }
 
   if (!user || !auth.currentUser) return <></>;

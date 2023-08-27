@@ -6,8 +6,10 @@ import { logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
+import { onAuthStateChanged } from 'firebase/auth';
+import { Route, getParams, push } from '@/routing';
 
-type JoiningStatus = 'Waiting...' | 'Searching...' | 'Joining...' | 'Joined!';
+type JoiningStatus = 'Waiting...' | 'Searching...' | 'Joining...' | 'Joined!' | 'Loading...';
 
 export default function Join() {
   const router = useRouter();
@@ -15,11 +17,13 @@ export default function Join() {
   const [status, setStatus] = useState<JoiningStatus | null>('Waiting...');
   const [isJoiningChallenge, setIsJoiningChallenge] = useState(false);
 
+  const { inviteId } = getParams(router);
+
   const {
     data: invite,
     isLoading: isLoadingInvite,
-  } = useQuery(['invite', router.query.inviteId], () => fetchInvite(router.query.inviteId! as string), {
-    enabled: !!router.query.inviteId,
+  } = useQuery(['invite', inviteId], () => fetchInvite(inviteId! as string), {
+    enabled: !!inviteId,
   });
 
   const {
@@ -37,39 +41,38 @@ export default function Join() {
   });
 
   useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setStatus('Loading...');
+        push(router, '/login', {
+          next: '/join'
+        });
+      }
+    });
+
     if (!router || !invite || !challenge) {
       setStatus('Waiting...');
-      return;
+      return unsubscribe;
     }
+
+    console.log('reached join with ', router.query);
 
     setStatus('Searching...');
-
-    if (!auth.currentUser) {
-      router.push({
-        pathname: '/login',
-        query: {
-          next: `/join?inviteId=${invite.id}`,
-        },
-      });
-      return;
-    }
 
     // User has already joined the challenge
     if (challenge.users.includes(auth.currentUser!.uid)) {
       setStatus('Joined!');
-      router.push({
-        pathname: '/leaderboard',
-        query: {
-          challengeId: challenge.id,
-        },
+      push(router, '/leaderboard', {
+        challengeId: challenge.id,
       });
-      return;
+      return unsubscribe;
     }
 
     if (!user) {
       setStatus('Waiting...');
-      return;
+      return unsubscribe;
     }
+    return unsubscribe;
   }, [router, invite, challenge, user]);
 
   function handleJoinChallenge() {
@@ -86,16 +89,14 @@ export default function Join() {
           joiner_id: auth.currentUser!.uid,
         });
       }
-      router.push({
-        pathname: '/leaderboard',
-        query: {
-          challengeId: challenge!.id,
-        },
+      push(router, '/leaderboard', {
+        challengeId: challenge!.id,
       });
     });
   }
 
-  if (!auth.currentUser || isLoadingInvite || !invite || isLoadingChallenge || isLoadingUser || isJoiningChallenge) {
+  if (!auth.currentUser || isLoadingInvite || !invite ||
+    isLoadingChallenge || isLoadingUser || isJoiningChallenge || status === 'Loading...') {
     return <Loading status={status} />;
   }
 

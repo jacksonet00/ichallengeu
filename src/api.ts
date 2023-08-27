@@ -28,40 +28,17 @@ export interface ICUserMutationQuery {
  *  will persist across all participants records with this uid.
  */
 export async function updateUser({ uid, user }: ICUserMutationQuery): Promise<void> {
-  if (user.name && auth.currentUser!.displayName !== user.name) {
+  if (user.name) {
     await updateProfile(auth.currentUser!, {
       displayName: user.name,
     });
-
-    const snapshot = await getDocs(query(collection(db, 'participants'), where('userId', '==', uid)));
-    if (!snapshot.empty) {
-      const batch = writeBatch(db);
-      snapshot.docs.forEach(doc => {
-        batch.set(doc.ref, {
-          name: user.name,
-        }, { merge: true });
-      });
-      await batch.commit();
-    }
   }
 
-  if (user.profilePhotoUrl && auth.currentUser!.photoURL !== user.profilePhotoUrl) {
+  if (user.profilePhotoUrl) {
     await updateProfile(auth.currentUser!, {
       photoURL: user.profilePhotoUrl,
     });
-
-    const snapshot = await getDocs(query(collection(db, 'participants'), where('userId', '==', uid)));
-    if (!snapshot.empty) {
-      const batch = writeBatch(db);
-      snapshot.docs.forEach(doc => {
-        batch.set(doc.ref, {
-          profilePhotoUrl: user.profilePhotoUrl,
-        }, { merge: true });
-      });
-      await batch.commit();
-    }
   }
-
   await setDoc(doc(db, 'users', uid), user, { merge: true });
 }
 
@@ -167,7 +144,12 @@ export async function updateParticipant({ userId, challengeId, participant }: Pa
 }
 
 export async function createParticipant(participant: ParticipantDocument): Promise<string> {
-  const ref = await addDoc(collection(db, 'participants'), participant);
+  const user = await fetchUser(participant.userId);
+
+  const ref = await addDoc(collection(db, 'participants'), {
+    ...participant,
+    profilePhotoUrl: user!.profilePhotoUrl,
+  } as ParticipantDocument);
   return ref.id;
 }
 

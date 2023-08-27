@@ -1,11 +1,12 @@
 import { fetchUser } from '@/api';
+import ErrorMessage from '@/components/ErrorMessage';
+import Loading from '@/components/Loading';
+import { getParams, push, pushNext } from '@/routing';
+import { logEvent } from 'firebase/analytics';
 import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { auth, getAnalyticsSafely } from '../firebase';
-import Loading from '@/components/Loading';
-import ErrorMessage from '@/components/ErrorMessage';
-import { logEvent } from 'firebase/analytics';
 
 function mountRecaptchaVerifier(): void {
   if (!window.recaptchaVerifier) {
@@ -41,6 +42,8 @@ function formatPhone(phone: string): { error: { message: string; } | null, phone
 
 export default function Login() {
   const router = useRouter();
+
+  const { next } = getParams(router);
 
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState<'PHONE' | 'CODE'>('PHONE');
@@ -146,12 +149,7 @@ export default function Login() {
           });
         }
 
-        router.push({
-          pathname: '/signup/username',
-          query: {
-            next: router.query.next as string || '/',
-          }
-        });
+        push(router, '/signup/username');
         return;
       }
     }
@@ -176,7 +174,12 @@ export default function Login() {
       });
     }
 
-    router.push(router.query.next as string || '/');
+    // this goes to
+    // http://localhost:3000/%2Fjoin?next=&inviteId=undefined
+    // instead of 
+    // http://localhost:3000/join?inviteId={inviteId}
+
+    pushNext(router, "/");
   }
 
   function handleBack(): void {
@@ -207,7 +210,7 @@ export default function Login() {
           onSubmit={validatePhone}
           className="flex flex-col items-center justify-center"
         >
-          {router.query.next && <h1 className="mb-4 text-lg font-semibold">login to continue</h1>}
+          {next && <h1 className="mb-4 text-lg font-semibold">login to continue</h1>}
           <div className='flex flex-col justify-center items-center'>
             <div className='flex flex-row justify-center items-center mb-4'>
               <select

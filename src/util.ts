@@ -1,5 +1,13 @@
+import { ApplicationVerifier } from 'firebase/auth';
 import { Timestamp } from 'firebase/firestore';
+import { NextRouter } from 'next/router';
 import { v4 } from "uuid";
+
+declare global {
+  interface Window {
+    recaptchaVerifier: ApplicationVerifier;
+  }
+}
 
 export function genKey() {
   return v4();

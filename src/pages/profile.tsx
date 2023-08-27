@@ -2,6 +2,7 @@ import { fetchUser, updateUser } from '@/api';
 import ErrorMessage from '@/components/ErrorMessage';
 import PhotoUploader from '@/components/PhotoUploader';
 import { auth, getAnalyticsSafely } from '@/firebase';
+import { push } from '@/routing';
 import { genKey } from '@/util';
 import { logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
@@ -38,9 +39,7 @@ export default function Profile() {
     queryClient.invalidateQueries('participants');
     queryClient.invalidateQueries('leaderboard');
 
-    router.push({
-      pathname: '/login',
-    });
+    push(router, '/login');
   }
 
   async function handleUpdateProfilePhoto(profilePhotoUrl: string) {

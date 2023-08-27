@@ -4,10 +4,11 @@ import HeaderProfile from '@/components/HeaderProfile';
 import { auth, getAnalyticsSafely } from '@/firebase';
 import { dateToTimestamp, stringToTimestamp, timestampToDate } from '@/util';
 import { logEvent } from 'firebase/analytics';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, updateProfile } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from 'react-query';
+import { push } from '@/routing';
 
 export default function NewChallengeForm() {
   const router = useRouter();
@@ -32,6 +33,12 @@ export default function NewChallengeForm() {
         profilePhotoUrl: auth.currentUser!.photoURL!,
       });
 
+      // i feel like i shouldn't have to do this... but
+      // await updateProfile(auth.currentUser!, {
+      //   displayName: user!.name,
+      //   photoURL: user!.profilePhotoUrl,
+      // });
+
       const analytics = getAnalyticsSafely();
       if (analytics) {
         logEvent(analytics!, 'create_challenge', {
@@ -41,11 +48,8 @@ export default function NewChallengeForm() {
         });
       }
 
-      router.push({
-        pathname: '/leaderboard',
-        query: {
-          challengeId,
-        },
+      push(router, '/leaderboard', {
+        challengeId,
       });
     }
   });
@@ -61,9 +65,8 @@ export default function NewChallengeForm() {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         setLoading(true);
-        router.push({
-          pathname: '/login',
-          query: { next: '/new' },
+        push(router, '/login', {
+          next: '/new',
         });
       }
       else {
@@ -104,11 +107,9 @@ export default function NewChallengeForm() {
   }
 
   if (auth.currentUser && !user) {
-    router.push({
-      pathname: '/signup/username',
-      query: {
-        next: '/new',
-      }
+    console.log('verifying this isnt the issue');
+    push(router, '/signup/username', {
+      next: '/new',
     });
     return <Loading />;
   }

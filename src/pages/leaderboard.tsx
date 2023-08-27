@@ -11,31 +11,30 @@ import { logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
+import { getParams, push } from '@/routing';
 
 export default function Leaderboard() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { challengeId } = router.query as { challengeId: string; };
+  const { challengeId } = getParams(router);
 
   const [loading, setLoading] = useState(false);
 
   const {
     data: challenge,
     isLoading: isLoadingChallenge,
-  } = useQuery(['challenges', challengeId], () => fetchChallenge(challengeId));
+  } = useQuery(['challenges', challengeId], () => fetchChallenge(challengeId!));
 
   const {
     data: participant,
     isLoading: isLoadingParticipant,
     refetch: refetchParticipant,
-  } = useQuery(['participants', challengeId], () => fetchParticipant(challengeId, auth.currentUser?.uid || ''), {
+  } = useQuery(['participants', challengeId], () => fetchParticipant(challengeId!, auth.currentUser?.uid || ''), {
     enabled: !!challengeId && !!auth.currentUser,
     onSuccess: (participant) => {
       if (!participant) {
-        router.push({
-          pathname: '/',
-        });
+        push(router, '/');
       }
 
       queryClient.invalidateQueries(['leaderboard', challengeId]);

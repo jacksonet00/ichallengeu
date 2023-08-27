@@ -3,6 +3,7 @@ import ErrorMessage from '@/components/ErrorMessage';
 import Loading from '@/components/Loading';
 import { DEFAULT_PROFILE_PHOTO_URL } from '@/constants';
 import { auth, getAnalyticsSafely } from '@/firebase';
+import { push, pushNext } from '@/routing';
 import { logEvent } from 'firebase/analytics';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
@@ -22,12 +23,8 @@ export default function Username() {
     mutationFn: updateUser,
     onSuccess: () => {
       queryClient.invalidateQueries('me');
-      router.push({
-        pathname: '/signup/profile-photo',
-        query: {
-          next: router.query.next || '/',
-        }
-      });
+
+      push(router, '/signup/profile-photo');
     }
   });
 
@@ -35,19 +32,13 @@ export default function Username() {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setLoading(true);
-        router.push({
-          pathname: '/login',
-          query: {
-            next: router.query.next || '/',
-          },
-        });
+
+        push(router, '/login');
       }
       else {
         const userDoc = await fetchUser(user.uid);
         if (userDoc) {
-          router.push({
-            pathname: router.query.next as string || '/',
-          });
+          pushNext(router, '/');
           return;
         }
         setLoading(false);
@@ -76,12 +67,7 @@ export default function Username() {
     setErrorMessage(null);
 
     if (!auth.currentUser) {
-      router.push({
-        pathname: '/login',
-        query: {
-          next: router.query.next as string || '/',
-        },
-      });
+      push(router, '/login');
       return;
     }
 

@@ -1,12 +1,5 @@
-import { ApplicationVerifier } from 'firebase/auth';
 import { DocumentData, DocumentSnapshot, Timestamp } from "firebase/firestore";
 import { daysBetween } from './util';
-
-declare global {
-  interface Window {
-    recaptchaVerifier: ApplicationVerifier;
-  }
-}
 
 export interface ICUserDocument {
   name: string;
@@ -174,7 +167,7 @@ export class LeaderboardData {
       graph.push(curr);
       i++;
     }
-    while (i < currentDay) {
+    while (i < challenge.currentDay()) {
       graph.push(0);
       i++;
     }
