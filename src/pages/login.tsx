@@ -106,7 +106,7 @@ export default function Login() {
           fatal: false,
         });
       }
-      setErrorMessage('Invalid phone number.');
+      setErrorMessage(JSON.stringify(e));
       setLoading(false);
       return;
     }
