@@ -36,7 +36,6 @@ Create custom leaderboards to compete with friends!
   - it does not...
   - maybe i could just make a cloud function that observes changes to user profile picture and batch writes it to particpants
   - simpler maybe i could just read the profile photo from the user <= this worked!
-- implement cloud functions to use server timestamp for date functions to improve security and fix 004
 - route to a confirmation page to fix 003 (done)
   - fixed it by fetching users
 - deploy on vercel
@@ -65,6 +64,7 @@ Create custom leaderboards to compete with friends!
 - add confetti to challenge creation
 - add confetti to accept invite
 - add haptics everywhere there is confetti
+- implement cloud functions to use server timestamp for date functions to improve security and fix 004
 
 ## 1,000+ users todos
 - premium plan
