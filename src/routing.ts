@@ -100,7 +100,8 @@ export function push(router: NextRouter, route: Route, queryParams?: QueryParams
     });
   }
 
-  console.error('why am i routiing to', route, 'with', params);
+  return new Promise(() => false);
+
   return router.push({
     pathname: route,
     query: {
