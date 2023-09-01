@@ -9,7 +9,7 @@ import TrophyCase from '@/components/TrophyCase';
 import { auth, getAnalyticsSafely } from '@/firebase';
 import { logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { getParams, push } from '@/routing';
 
@@ -20,6 +20,7 @@ export default function Leaderboard() {
   const { challengeId } = getParams(router);
 
   const [loading, setLoading] = useState(false);
+  const [completed, setCompleted] = useState<null | boolean>(null);
 
   const {
     data: challenge,
@@ -30,13 +31,12 @@ export default function Leaderboard() {
     data: participant,
     isLoading: isLoadingParticipant,
     refetch: refetchParticipant,
-  } = useQuery(['participants', challengeId], () => fetchParticipant(challengeId!, auth.currentUser?.uid || ''), {
+  } = useQuery(['participants', challengeId, auth.currentUser?.uid], () => fetchParticipant(challengeId!, auth.currentUser?.uid || ''), {
     enabled: !!challengeId && !!auth.currentUser,
     onSuccess: (participant) => {
       if (!participant) {
-        push(router, '/');
+        return;
       }
-
       queryClient.invalidateQueries(['leaderboard', challengeId]);
       setLoading(false);
     },
@@ -55,13 +55,21 @@ export default function Leaderboard() {
     mutationFn: updateParticipant,
     onSuccess: () => {
       queryClient.invalidateQueries(['leaderboard', challengeId]);
-      queryClient.invalidateQueries(['participants', challengeId]);
+      queryClient.invalidateQueries(['participants', challengeId, auth.currentUser?.uid]);
     },
-  })
+  });
+
+  useEffect(() => {
+    if (!participant || !challenge) {
+      return;
+    }
+    setCompleted(participant.daysCompleted.includes(challenge!.currentDay() - 1));
+  }, [participant, challenge]);
 
   async function toggleCompletion() {
     setLoading(true);
     if (participant!.daysCompleted.includes(challenge!.currentDay() - 1)) {
+      setCompleted(false);
       _updateParticipant({
         challengeId: challenge!.id,
         userId: auth.currentUser!.uid,
@@ -71,6 +79,7 @@ export default function Leaderboard() {
       });
     }
     else {
+      setCompleted(true);
       _updateParticipant({
         challengeId: challenge!.id,
         userId: auth.currentUser!.uid,
@@ -104,9 +113,9 @@ export default function Leaderboard() {
       <HeaderProfile />
       <h1 className="font-bold mb-8">{challenge!.name}: Day #{`${challenge!.currentDay()} of ${challenge!.dayCount}`}{`${challenge!.isCompleted() ? ' ✅' : ''}`}</h1>
       <div className='mb-8'>
-        {challenge!.users.includes(auth.currentUser!.uid) && (
+        {challenge!.users.includes(auth.currentUser!.uid) && completed !== null && (
           <CompletionTracker
-            completed={participant.daysCompleted.includes(challenge!.currentDay() - 1)}
+            completed={completed}
             toggleCompletion={toggleCompletion}
             challenge={challenge}
           />

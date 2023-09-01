@@ -1,22 +1,26 @@
 import { fetchUser, updateUser } from '@/api';
 import ErrorMessage from '@/components/ErrorMessage';
+import Loading from '@/components/Loading';
 import PhotoUploader from '@/components/PhotoUploader';
 import { auth, getAnalyticsSafely } from '@/firebase';
 import { push } from '@/routing';
 import { genKey } from '@/util';
 import { logEvent } from 'firebase/analytics';
 import { useRouter } from 'next/router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
+import Image from 'next/image'
 
 export default function Profile() {
   const [updatedUsername, setUpdatedUsername] = useState('');
+
+  const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  useQuery('me', () => fetchUser(auth.currentUser!.uid), {
+  const { data: user } = useQuery('me', () => fetchUser(auth.currentUser!.uid), {
     enabled: !!auth.currentUser,
     onSuccess: (user) => {
       setUpdatedUsername(user!.name);
@@ -31,6 +35,15 @@ export default function Profile() {
       queryClient.invalidateQueries('me');
     }
   });
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        setLoading(false);
+      }
+    });
+    return unsubscribe;
+  })
 
   async function handleSignOut() {
     await auth.signOut();
@@ -83,15 +96,17 @@ export default function Profile() {
     }
   }
 
-  if (!auth.currentUser) return <></>;
+  if (loading || !user || !auth.currentUser) {
+    return <Loading />;
+  }
 
   const analytics = getAnalyticsSafely();
   if (analytics) {
     logEvent(analytics!, 'page_view', {
       page_title: 'profile',
       page_path: '/profile',
-      user_id: auth.currentUser.uid,
-      user_name: auth.currentUser.displayName,
+      user_id: auth.currentUser!.uid,
+      user_name: auth.currentUser!.displayName,
     });
   }
 
@@ -99,10 +114,10 @@ export default function Profile() {
     <div className="flex flex-col items-center justify-center">
       <div className="mb-8">
         <PhotoUploader
-          directory={`profile-photos/${auth.currentUser.uid}`}
-          filename={genKey()}
+          directory={`profile-photos`}
+          filename={auth.currentUser!.uid}
           onUpload={handleUpdateProfilePhoto}
-          defaultUrl={auth.currentUser.photoURL}
+          defaultUrl={user!.profilePhotoUrl}
         />
       </div>
       <form
@@ -118,7 +133,7 @@ export default function Profile() {
         <button
           type="submit"
           className="w-60 mt-4 mb-2 bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center disabled:bg-slate-200"
-          disabled={!updatedUsername || updatedUsername === auth.currentUser.displayName}
+          disabled={!updatedUsername || updatedUsername === auth.currentUser!.displayName}
         >
           update name
         </button>

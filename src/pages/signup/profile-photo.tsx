@@ -97,8 +97,8 @@ export default function ProfilePhoto() {
       </h1>
       <form className="flex flex-col items-center justify-center" onSubmit={onSubmitPhoto}>
         <PhotoUploader
-          directory={`profile-photos/${auth.currentUser.uid}`}
-          filename={genKey()}
+          directory={`profile-photos`}
+          filename={auth.currentUser.uid}
           onUpload={(url) => setPhotoUrl(url)}
         />
         <button

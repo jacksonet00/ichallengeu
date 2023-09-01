@@ -1,5 +1,5 @@
-import { DocumentReference, addDoc, collection, doc, getDoc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
-import { Challenge, ChallengeDocument, ICUser, Invite, LeaderboardData, Participant, ParticipantDocument } from './data';
+import { DocumentReference, addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where, writeBatch } from 'firebase/firestore';
+import { Challenge, ChallengeDocument, ICUser, Invite, LeaderboardData, Participant, ParticipantDocument, ReferralDocument } from './data';
 import { auth, db, storage } from './firebase';
 import { genKey } from './util';
 import { updateProfile } from 'firebase/auth';
@@ -50,11 +50,11 @@ export async function updateUser({ uid, user }: ICUserMutationQuery): Promise<vo
   }
 
   if (diff.name || diff.profilePhotoUrl) {
-    const snapshot = await getDocs(query(collection(db, 'users'), where('uid', '==', uid)));
+    const snapshot = await getDocs(query(collection(db, 'participants'), where('userId', '==', uid)));
     if (!snapshot.empty) {
       const batch = writeBatch(db);
       snapshot.docs.forEach(doc => {
-        batch.set(doc.ref, diff, { merge: true });
+        batch.set(doc.ref, diff as Partial<ParticipantDocument>, { merge: true });
       });
       batch.commit();
     }
@@ -102,23 +102,36 @@ export async function createChallenge(challenge: ChallengeDocument): Promise<str
   return ref.id;
 }
 
-export async function joinChallenge(challenge: Challenge, user: ICUser): Promise<void> {
+export async function joinChallenge(challenge: Challenge, user: ICUser, invite?: Invite): Promise<void> {
   const batch = writeBatch(db);
 
   batch.set(doc(db, 'challenges', challenge.id), {
     users: [...challenge.users, user.id]
-  }, { merge: true });
+  } as Partial<Challenge>, { merge: true });
 
   batch.set(doc(db, 'participants', genKey()), {
     challengeId: challenge.id,
     userId: user.id,
     name: user.name,
     daysCompleted: [],
-  });
+    profilePhotoUrl: user.profilePhotoUrl,
+  } as ParticipantDocument);
 
   batch.set(doc(db, 'users', user.id), {
     challenges: [...user.challenges, challenge.id],
-  }, { merge: true });
+  } as Partial<ICUser>, { merge: true });
+
+  if (invite) {
+    batch.set(doc(db, 'referrals', genKey()), {
+      inviteId: challenge.id,
+      senderId: invite.senderId,
+      recipientId: user.id,
+      challengeName: challenge.name,
+      senderName: invite.senderName,
+      recipientName: user.name,
+      acceptedAt: serverTimestamp(),
+    } as ReferralDocument);
+  }
 
   await batch.commit();
 }

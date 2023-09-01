@@ -1,12 +1,10 @@
+import { DEFAULT_PROFILE_PHOTO_URL } from '@/constants';
 import { logEvent } from "firebase/analytics";
 import Image from 'next/image';
 import { useState } from "react";
 import { LeaderboardData } from "../data";
 import { getAnalyticsSafely } from "../firebase";
 import CompletionGraph from "./CompletionGraph";
-import { DEFAULT_PROFILE_PHOTO_URL } from '@/constants';
-import { useQuery } from 'react-query';
-import { fetchUser } from '@/api';
 
 export type LeaderboardProfileProps = {
     leaderboardData: LeaderboardData;
@@ -18,13 +16,6 @@ export default function LeaderboardProfile({
     crown,
 }: LeaderboardProfileProps) {
     const [isShowingGraph, setIsShowingGraph] = useState(false);
-
-    const {
-        data: user,
-    } = useQuery(
-        ['user', leaderboardData.participant.userId],
-        () => fetchUser(leaderboardData.participant.userId)
-    );
 
     const {
         participant,
@@ -78,12 +69,12 @@ export default function LeaderboardProfile({
                 <div className="flex flex-row items-center justify-center">
                     <picture className="mr-2">
                         <source
-                            srcSet={user?.profilePhotoUrl ?? DEFAULT_PROFILE_PHOTO_URL}
+                            srcSet={participant.profilePhotoUrl ?? DEFAULT_PROFILE_PHOTO_URL}
                             type="image/webp"
                         />
                         <img
                             className="rounded-full h-8 w-8"
-                            src={user?.profilePhotoUrl ?? DEFAULT_PROFILE_PHOTO_URL}
+                            src={participant.profilePhotoUrl ?? DEFAULT_PROFILE_PHOTO_URL}
                             alt={`profile photo for ${participant.name}`}
                         />
                     </picture>

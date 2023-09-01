@@ -209,8 +209,8 @@ export default function Login() {
                 onChange={e => setCountryCode(e.target.value)}
               >
                 <option label="🇺🇸">+1</option>
-                <option label="🇨🇦">+61</option>
-                {/* todo: bring more countries online */}
+                <option label="🇨🇦🇺">+61</option>
+
               </select>
               <input
                 type="tel"

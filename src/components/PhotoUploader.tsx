@@ -27,17 +27,11 @@ export default function PhotoUploader({
       {url &&
         <div className="bg-slate-700 rounded-full h-32 w-32 m b-40">
           <label htmlFor="edit-file">
-            <picture className="relative overflow-hidden">
-              <source srcSet={url} type="image/webp" />
-              <div className='bg-slate-900 bg-opacity-30 rounded-sm w-16 left-8  h-8 absolute bottom-2 text-white flex items-center justify-center'>
+            <div className="relative overflow-hidden h-32 w-32 rounded-full hover:opacity-80 hover: cursor-pointer" style={{ backgroundImage: `url(${url.split('?')[0]}_200x200?${url.split('?')[1]})`, backgroundSize: '130px', backgroundPositionY: 0 }}>
+              <div className='bg-slate-900 bg-opacity-30 rounded-sm w-32 absolute bottom-4 text-white flex items-center justify-center'>
                 <p className="opacity-80">edit</p>
               </div>
-              <img
-                className="rounded-full h-32 w-32 hover:opacity-80 hover:cursor-pointer"
-                src={url}
-                alt={`the photo you just uploaded`}
-              />
-            </picture>
+            </div>
             <input onChange={handleUploadPhoto} id="edit-file" type="file" className="hidden" />
           </label>
         </div>}

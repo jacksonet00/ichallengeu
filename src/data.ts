@@ -54,6 +54,40 @@ export class Invite {
   }
 };
 
+export interface ReferralDocument {
+  inviteId: string;
+  senderId: string;
+  recipientId: string;
+  challengeName: string;
+  senderName: string;
+  recipientName: string;
+  acceptedAt: Timestamp;
+}
+
+export class Referral {
+  id: string;
+  inviteId: string;
+  senderId: string;
+  recipientId: string;
+  challengeName: string;
+  senderName: string;
+  recipientName: string;
+  acceptedAt: Date;
+
+  constructor(doc: DocumentSnapshot<DocumentData>) {
+    const { inviteId, senderId, recipientId, challengeName, senderName, recipientName, acceptedAt } = doc.data()! as ReferralDocument;
+
+    this.id = doc.id;
+    this.inviteId = inviteId;
+    this.senderId = senderId;
+    this.recipientId = recipientId;
+    this.challengeName = challengeName;
+    this.senderName = senderName;
+    this.recipientName = recipientName;
+    this.acceptedAt = acceptedAt.toDate();
+  }
+}
+
 export interface ChallengeDocument {
   ownerId: string;
   name: string;

@@ -1,13 +1,13 @@
 import { fetchChallenge, fetchInvite, fetchUser, joinChallenge } from '@/api';
-import Loading from '@/components/Loading';
 import HeaderProfile from '@/components/HeaderProfile';
+import Loading from '@/components/Loading';
 import { auth, getAnalyticsSafely } from '@/firebase';
+import { getParams, push } from '@/routing';
 import { logEvent } from 'firebase/analytics';
+import { onAuthStateChanged } from 'firebase/auth';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
-import { onAuthStateChanged } from 'firebase/auth';
-import { Route, getParams, push } from '@/routing';
 
 type JoiningStatus = 'Waiting...' | 'Searching...' | 'Joining...' | 'Joined!' | 'Loading...';
 
@@ -75,23 +75,25 @@ export default function Join() {
     return unsubscribe;
   }, [router, invite, challenge, user]);
 
-  function handleJoinChallenge() {
+  async function handleJoinChallenge() {
     setIsJoiningChallenge(true);
     setStatus('Joining...');
 
-    joinChallenge(challenge!, user!).then(() => {
-      setStatus('Joined!');
-      const analytics = getAnalyticsSafely();
-      if (analytics) {
-        logEvent(analytics, 'join_challenge', {
-          challenge_id: challenge!.id,
-          sender_id: invite!.senderId,
-          joiner_id: auth.currentUser!.uid,
-        });
-      }
-      push(router, '/leaderboard', {
-        challengeId: challenge!.id,
+    await joinChallenge(challenge!, user!, invite!);
+
+    setStatus('Joined!');
+
+    const analytics = getAnalyticsSafely();
+    if (analytics) {
+      logEvent(analytics, 'join_challenge', {
+        challenge_id: challenge!.id,
+        sender_id: invite!.senderId,
+        joiner_id: auth.currentUser!.uid,
       });
+    }
+
+    push(router, '/leaderboard', {
+      challengeId: challenge!.id,
     });
   }
 

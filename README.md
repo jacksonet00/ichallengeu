@@ -11,7 +11,7 @@ Create custom leaderboards to compete with friends!
 - When the challenge ends, the leaderboard will be updated with a trophy case featuring the winners of the challenge.
 - Have fun!
 
-## todos
+## todos (done)
 
 - add profile photos to participants (done)
 - implement default profile photos (done)
@@ -38,24 +38,34 @@ Create custom leaderboards to compete with friends!
   - simpler maybe i could just read the profile photo from the user <= this worked!
 - route to a confirmation page to fix 003 (done)
   - fixed it by fetching users
-- deploy on vercel
+- deploy on vercel (done)
 
 ## known bugs
-- (001) profile-photo route to router.query.next has a bug where it doesn't parse "%3F" as "?"
-- (002) there is a bug when the account gets created it can't successfully set the auth current user profile photo so the participant photo doesn't get set (hacked this one)
-- (003) marking a completion sometimes show the wrong ui or will navigate you off the page
-- (004) dates kinda near the start date of a challenge are a little iffy if we're calling it day 0 or day 1
+- 001: profile-photo route to router.query.next has a bug where it doesn't parse "%3F" as "?" (closed)
+- 002: there is a bug when the account gets created it can't successfully set the auth current user profile photo so the participant photo doesn't get set (closed)
+  - that wasn't why... but okay
+  - fixed api/joinChallenge... it wasn't type safe and i wasn't passing the photo url... i shouldve just traced it through the functions to begin with, but i never thought of it going through the invite acceptance path
+- 003: marking a completion sometimes show the wrong ui or will navigate you off the page (close)
+- 004: dates kinda near the start date of a challenge are a little iffy if we're calling it day 0 or day 1
+- 005: edit button displays incorrectly in prod (closed)
+- 006: edit photo doesn't work in prod on mobile
 
 ## stretch todos
-- nice success messages on profile
+
+### phase 1
+- close bugs 005 & 006 (done)
+- add join records in the database (done)
 - image cropping
 - image resizing
-- delete old profile photos on change
+
+### backlog
+- implement cloud functions to use server timestamp for date functions to improve security and fix 004
+- nice success messages on profile
+- delete old profile photos on change (done)
 - sorting challenges on homepage
 - ranking public challenges on homepage
 - build landing page to describe functionality if you aren't logged in
 - dark mode
-- add join records in the database
 - move toggle completion to cloud function for security
 - lower bundle size
   - switch from chakra spinner to tailwind spinner
@@ -64,7 +74,8 @@ Create custom leaderboards to compete with friends!
 - add confetti to challenge creation
 - add confetti to accept invite
 - add haptics everywhere there is confetti
-- implement cloud functions to use server timestamp for date functions to improve security and fix 004
+- add the rest of the country codes to my phone input
+- add text alerts
 
 ## 1,000+ users todos
 - premium plan
