@@ -9,6 +9,9 @@ const nextConfig = {
       },
     ],
   },
+  // async rewrites() {
+  //   return [];
+  // }
 }
 
 module.exports = nextConfig
