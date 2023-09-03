@@ -5,6 +5,7 @@ import { auth, getAnalyticsSafely } from '@/firebase';
 import { getParams, push } from '@/routing';
 import { logEvent } from 'firebase/analytics';
 import { onAuthStateChanged } from 'firebase/auth';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
@@ -114,15 +115,32 @@ export default function Join() {
   }
 
   return (
-    <div className='flex flex-col items-center'>
-      <HeaderProfile />
-      <h1 className="font-bold text-xl mb-2">{invite!.senderName} invited you to join</h1>
-      <h1 className="font-bold text-xl mb-12">{challenge!.name}!</h1>
-      <h1 className="font-semibold text-lg mb-4">accept the challenge?</h1>
-      <button
-        onClick={handleJoinChallenge}
-        className="bg-sky-100 hover:bg-sky-200 px-3 py-2 rounded-md w-48 font-bold text-md"
-      >{"i'm in"}</button>
-    </div>
+    <>
+      <Head>
+        <title key="title">{invite.senderName}&aposs invite to {challenge!.name} | iChallenge U</title>
+        <meta key="keywords" name="keywords" content="challenge, friends competition app, fitness, learning, motivation," />
+        <meta key="description" name="description" content={`${invite!.senderName} invited you to join ${challenge!.name}! Will you accept?`} />
+        <meta key="og-title" property="og:title" content={`${invite.senderName}&aposs ${challenge!.name} | iChallenge U`} />
+        <meta key="og-description" property="og:description" content={`${invite!.senderName} invited you to join ${challenge!.name}! Will you accept?`} />
+        <meta property="og:image" content="https://ichallengeu.app/ichallengeu.png" />
+        <meta key="og-url" property="og:url" content={`https://ichallengeu.app/join?inviteId=${invite.id}`} />
+        <meta key="twitter-title" name="twitter:title" content={`${invite.senderName}&aposs ${challenge!.name} | iChallenge U`} />
+        <meta key="twitter-description" name="twitter:description" content={`${invite!.senderName} invited you to join ${challenge!.name}! Will you accept?`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        {/* <meta name="twitter:site" content="@ichallengeu_app" /> */}
+        <meta name="twitter:image" content={`https://ichallengeu.app/ichallengeu.png`} />
+        <link rel="canonical" href={`https://ichallengeu.app/join?inviteId=${invite.id}`} />
+      </Head>
+      <div className='flex flex-col items-center'>
+        <HeaderProfile />
+        <h1 className="font-bold text-xl mb-2">{invite!.senderName} invited you to join</h1>
+        <h1 className="font-bold text-xl mb-12">{challenge!.name}!</h1>
+        <h1 className="font-semibold text-lg mb-4">accept the challenge?</h1>
+        <button
+          onClick={handleJoinChallenge}
+          className="bg-sky-100 hover:bg-sky-200 px-3 py-2 rounded-md w-48 font-bold text-md"
+        >{"i'm in"}</button>
+      </div>
+    </>
   );
 }

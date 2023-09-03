@@ -2,17 +2,17 @@ import { NextRouter } from 'next/router';
 
 type Routes = {
   "/": undefined;
+  "/new": undefinted;
+  "/profile": undefined;
   "/join": {
     inviteId: string;
   };
   "/leaderboard": {
     challengeId: string;
   };
-  "/new": undefined;
-  "/login": undefined;
-  "/profile": undefined;
-  "/signup/username": undefined;
-  "/signup/profile-photo": undefined;
+  "/login": QueryParams;
+  "/signup/username": QueryParams;
+  "/signup/profile-photo": QueryParams;
 };
 export type Route = keyof Routes;
 

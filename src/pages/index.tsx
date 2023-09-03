@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from 'react-query';
 import { Challenge } from "../data";
 import { auth, getAnalyticsSafely } from '../firebase';
+import Head from 'next/head';
 
 function renderChallengeList(challenges: Challenge[]) {
   return challenges.map((challenge) => (
@@ -60,17 +61,35 @@ export default function Home() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-start">
-      <HeaderProfile />
-      <div
-        className="bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center mb-8"
-      >
-        <Link href={{
-          pathname: '/new',
-        }}>Start a New Challenge</Link>
+    <>
+      <Head>
+        <title key="title">iChallenge U</title>
+        <meta key="keywords" name="keywords" content="challenge, friends competition app, fitness, learning, motivation," />
+        <meta key="description" name="description" content="Compete with friends! Join now to challenge your friends and stay motivated!" />
+        <meta key="og-title" property="og:title" content="iChallenge U" />
+        <meta key="og-description" property="og:description" content="Compete with friends! Join now to challenge your friends and stay motivated!" />
+        <meta property="og:image" content="https://ichallengeu.app/ichallengeu.png" />
+        <meta key="og-url" property="og:url" content={`https://ichallengeu.app/`} />
+        <meta key="twitter-title" name="twitter:title" content="iChallenge U" />
+        <meta key="twitter-description" name="twitter:description" content="Compete with friends! Join now to challenge your friends and stay motivated!" />
+        <meta name="twitter:card" content="summary_large_image" />
+        {/* <meta name="twitter:site" content="@ichallengeu_app" /> */}
+        <meta name="twitter:image" content={`https://ichallengeu.app/ichallengeu.png`} />
+
+        <link rel="canonical" href="https://ichallengeu.app/" />
+      </Head>
+      <div className="flex flex-col items-center justify-start">
+        <HeaderProfile />
+        <div
+          className="bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center mb-8"
+        >
+          <Link href={{
+            pathname: '/new',
+          }}>Start a New Challenge</Link>
+        </div>
+        {challenges && challenges?.length > 0 && <h1 className="text-2xl font-bold mb-8">My Challenges</h1>}
+        {renderChallengeList(challenges!)}
       </div>
-      {challenges && challenges?.length > 0 && <h1 className="text-2xl font-bold mb-8">My Challenges</h1>}
-      {renderChallengeList(challenges!)}
-    </div>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import { ConfirmationResult, RecaptchaVerifier, signInWithPhoneNumber } from 'fi
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { auth, getAnalyticsSafely } from '../firebase';
+import Head from 'next/head';
 
 function mountRecaptchaVerifier(): void {
   if (!window.recaptchaVerifier) {
@@ -194,70 +195,87 @@ export default function Login() {
   }
 
   return (
-    <div>
-      {step === 'PHONE' &&
-        <form
-          onSubmit={validatePhone}
-          className="flex flex-col items-center justify-center"
-        >
-          {next && <h1 className="mb-4 text-lg font-semibold">login to continue</h1>}
-          <div className='flex flex-col justify-center items-center'>
-            <div className='flex flex-row justify-center items-center mb-4'>
-              <select
-                className='mr-4'
-                value={countryCode}
-                onChange={e => setCountryCode(e.target.value)}
+    <>
+      <Head>
+        <title key="title">Login | iChallengeU</title>
+        <meta key="keywords" name="keywords" content="challenge, friends competition app, fitness, learning, motivation," />
+        <meta key="description" name="description" content={step === 'PHONE' ? 'Enter your phone number to login' : 'Enter your 6 digit verification code.'} />
+        <meta key="og-title" property="og:title" content="Login | iChallengeU" />
+        <meta key="og-description" property="og:description" content={step === 'PHONE' ? 'Enter your phone number to login' : 'Enter your 6 digit verification code.'} />
+        <meta property="og:image" content="https://ichallengeu.app/ichallengeu.png" />
+        <meta key="og-url" property="og:url" content={`https://ichallengeu.app/join?inviteId=${invite.id}`} />
+        <meta key="twitter-title" name="twitter:title" content="Login | iChallengeU" />
+        <meta key="twitter-description" name="twitter:description" content={step === 'PHONE' ? 'Enter your phone number to login' : 'Enter your 6 digit verification code.'} />
+        <meta name="twitter:card" content="summary_large_image" />
+        {/* <meta name="twitter:site" content="@ichallengeu_app" /> */}
+        <meta name="twitter:image" content={`https://ichallengeu.app/ichallengeu.png`} />
+        <link rel="canonical" href={`https://ichallengeu.app/join?inviteId=${invite.id}`} />
+      </Head>
+      <div>
+        {step === 'PHONE' &&
+          <form
+            onSubmit={validatePhone}
+            className="flex flex-col items-center justify-center"
+          >
+            {next && <h1 className="mb-4 text-lg font-semibold">login to continue</h1>}
+            <div className='flex flex-col justify-center items-center'>
+              <div className='flex flex-row justify-center items-center mb-4'>
+                <select
+                  className='mr-4'
+                  value={countryCode}
+                  onChange={e => setCountryCode(e.target.value)}
+                >
+                  <option label="🇺🇸">+1</option>
+                  <option label="🇨🇦🇺">+61</option>
+
+                </select>
+                <input
+                  type="tel"
+                  name="phone"
+                  placeholder="Phone number"
+                  value={rawPhoneString}
+                  onChange={e => setRawPhoneString(e.target.value)}
+
+                  className="p-2 border border-slate-200 rounded w-full"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full mb-2 bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center"
               >
-                <option label="🇺🇸">+1</option>
-                <option label="🇨🇦🇺">+61</option>
-
-              </select>
-              <input
-                type="tel"
-                name="phone"
-                placeholder="Phone number"
-                value={rawPhoneString}
-                onChange={e => setRawPhoneString(e.target.value)}
-
-                className="p-2 border border-slate-200 rounded w-full"
-              />
+                next
+              </button>
+              {errorMessage && <ErrorMessage message={errorMessage} />}
             </div>
-            <button
-              type="submit"
-              className="w-full mb-2 bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center"
-            >
-              next
-            </button>
-            {errorMessage && <ErrorMessage message={errorMessage} />}
-          </div>
-      </form>}
-      {confirmationResult && step === 'CODE' && (
-        <form onSubmit={validateCode}>
-          <div className='flex flex-col items-center justify-center'>
-          <input
-            type="text"
-            name="code"
-            placeholder="Verification code"
-            value={code}
-            onChange={e => setCode(e.target.value)}
-              className="p-2 border border-slate-200 rounded w-60 mb-4"
-          />
-            <button
-              type="submit"
-              className="w-60 mb-2 bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center"
-            >
-              verify
-            </button>
-            <button
-              onClick={handleBack}
-              className="w-60 bg-slate-200 hover:bg-slate-400 text-zinc-900 font-bold py-2 px-4 rounded inline-flex items-center mb-2 text-center justify-center"
-            >
-              back
-            </button>
-            {errorMessage && <ErrorMessage message={errorMessage} />}
-          </div>
-        </form>
-      )}
-    </div>
+          </form>}
+        {confirmationResult && step === 'CODE' && (
+          <form onSubmit={validateCode}>
+            <div className='flex flex-col items-center justify-center'>
+              <input
+                type="text"
+                name="code"
+                placeholder="Verification code"
+                value={code}
+                onChange={e => setCode(e.target.value)}
+                className="p-2 border border-slate-200 rounded w-60 mb-4"
+              />
+              <button
+                type="submit"
+                className="w-60 mb-2 bg-sky-200 hover:bg-sky-400 text-slate-900 font-bold py-2 px-4 rounded inline-flex items-center text-center justify-center"
+              >
+                verify
+              </button>
+              <button
+                onClick={handleBack}
+                className="w-60 bg-slate-200 hover:bg-slate-400 text-zinc-900 font-bold py-2 px-4 rounded inline-flex items-center mb-2 text-center justify-center"
+              >
+                back
+              </button>
+              {errorMessage && <ErrorMessage message={errorMessage} />}
+            </div>
+          </form>
+        )}
+      </div>
+    </>
   );
 }
